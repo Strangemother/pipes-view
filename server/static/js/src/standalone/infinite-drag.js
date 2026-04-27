@@ -120,6 +120,45 @@ class ZoomableInfiniteDrag extends InfiniteDrag {
         this.moveAllNodes(this.scale, prevScale, this.origin)
     }
 
+    dragComplete() {
+        this.resetZoomBase()
+    }
+
+    snapshotNodeBase(el, containerRect) {
+        if (el.dataset.zoomBaseLeft !== undefined) {
+            return
+        }
+
+        const rect = el.getBoundingClientRect()
+        const baseLeft = Number.isFinite(parseFloat(el.style.left))
+            ? parseFloat(el.style.left)
+            : rect.left - containerRect.left
+        const baseTop = Number.isFinite(parseFloat(el.style.top))
+            ? parseFloat(el.style.top)
+            : rect.top - containerRect.top
+        const baseWidth = Number.isFinite(parseFloat(el.style.width))
+            ? parseFloat(el.style.width)
+            : rect.width
+        const baseHeight = Number.isFinite(parseFloat(el.style.height))
+            ? parseFloat(el.style.height)
+            : rect.height
+
+        el.dataset.zoomBaseLeft = baseLeft
+        el.dataset.zoomBaseTop = baseTop
+        el.dataset.zoomBaseWidth = baseWidth
+        el.dataset.zoomBaseHeight = baseHeight
+    }
+
+    resetZoomBase() {
+        const nodes = this.element.querySelectorAll(this.itemSelector)
+        for (let el of nodes) {
+            delete el.dataset.zoomBaseLeft
+            delete el.dataset.zoomBaseTop
+            delete el.dataset.zoomBaseWidth
+            delete el.dataset.zoomBaseHeight
+        }
+    }
+
     // moveAllNodes() {
     //    // callback.
     // }
@@ -134,18 +173,7 @@ class ZoomableInfiniteDrag extends InfiniteDrag {
             // let win = nodes[winName]
             const el = winName
 
-            // Snapshot the unzoomed position+size the first time we see this node,
-            // or whenever the zoom is reset to 1 externally.
-            if (el.dataset.zoomBaseLeft === undefined) {
-                const left = parseFloat(el.style.left) || 0
-                const top  = parseFloat(el.style.top)  || 0
-                if (left === 0 && top === 0) continue  // not yet positioned
-
-                el.dataset.zoomBaseLeft   = left
-                el.dataset.zoomBaseTop    = top
-                el.dataset.zoomBaseWidth  = el.offsetWidth
-                el.dataset.zoomBaseHeight = el.offsetHeight
-            }
+            this.snapshotNodeBase(el, rect)
 
             // Always derive from the stored base — never from the current scaled value.
             // Use the live mouse position each tick so the pivot follows the cursor.
@@ -159,8 +187,10 @@ class ZoomableInfiniteDrag extends InfiniteDrag {
             const newWidth  = baseWidth  * scale
             const newHeight = baseHeight * scale
 
-            // win.move(newLeft, newTop)
-            // win.resize(newWidth, newHeight)
+            el.style.left = `${newLeft}px`
+            el.style.top = `${newTop}px`
+            el.style.width = `${newWidth}px`
+            el.style.height = `${newHeight}px`
 
             const scalePercent = Math.round(scale * 100 / 10) * 10
             el.className = el.className.replace(/\binf-drag-zoom-scale-\d+\b/g, '')
