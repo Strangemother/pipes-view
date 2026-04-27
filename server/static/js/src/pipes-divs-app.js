@@ -201,12 +201,17 @@ const runPipes = function(conf) {
     window.pipesTool = pipesTool
 
 
-    stickAll('.box');
+    setTimeout(function(){
 
-    dragSolo = new DragSolo()
-    dragSolo.enable('.box')
-    
+        stickAll('.box');
 
-    window.dragSolo = dragSolo
+        dragSolo = new DragSolo()
+        dragSolo.enable('.box')
+
+        window.dragSolo = dragSolo;
+        document.querySelectorAll('.box').forEach((n)=>{
+            n.style.position = 'absolute'
+        })
+    }, 500)
 }
 

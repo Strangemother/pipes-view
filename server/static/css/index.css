@@ -494,8 +494,8 @@ html.layer-space-container {
     height: 6em;
     border-radius: .5em;
     margin: 1em;
-    position: relative;
-    position: absolute;
+    /* position: relative; */
+    /* position: absolute; */
 }
 
 .panspace-container .box {
