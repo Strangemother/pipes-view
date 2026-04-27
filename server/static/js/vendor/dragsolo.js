@@ -166,11 +166,9 @@ class Draggable {
      */
     presentSpaceXY() {
         let dragParent = this.dragParent || this.node.offsetParent || document.documentElement
-        let parentRect = dragParent.getBoundingClientRect()
-        let parentLeft = parentRect.left + dragParent.clientLeft - dragParent.scrollLeft
-        let parentTop = parentRect.top + dragParent.clientTop - dragParent.scrollTop
-        let x = this.space.clientX - parentLeft - this.space.offsetX
-        let y = this.space.clientY - parentTop - this.space.offsetY
+        let parentOrigin = getParentClientOrigin(dragParent)
+        let x = this.space.clientX - parentOrigin.left - this.space.offsetX
+        let y = this.space.clientY - parentOrigin.top - this.space.offsetY
         this.setNodeXY(x, y)
 
         for(let cf of this.onChangeHooks) {
@@ -188,6 +186,17 @@ class Draggable {
         // this.position.y = y
         this.node.style.top = `${y}px`
         this.node.style.left = `${x}px`
+    }
+}
+
+
+const getParentClientOrigin = function(dragParent) {
+    dragParent = dragParent || document.documentElement
+    let parentRect = dragParent.getBoundingClientRect()
+
+    return {
+        left: parentRect.left + dragParent.clientLeft - dragParent.scrollLeft,
+        top: parentRect.top + dragParent.clientTop - dragParent.scrollTop
     }
 }
 
@@ -316,6 +325,39 @@ class DragSolo {
     }
 }
 
+
+const stickAll = function(selector) {
+    /* given a selector, write the existing real position 
+    of all nodes so they can be tracked from their initial position.
+
+    This allows divs to have a page position, and then activate dragging will not cause them to jump to the top-left corner.
+    */
+    let nodes = Array.from(document.querySelectorAll(selector))
+    let snapshots = nodes.map(function(node) {
+        let rect = node.getBoundingClientRect()
+        let parentOrigin = getParentClientOrigin(node.offsetParent || document.documentElement)
+
+        return {
+            node,
+            x: rect.left - parentOrigin.left,
+            y: rect.top - parentOrigin.top,
+            width: rect.width,
+            height: rect.height
+        }
+    })
+
+    for(let snapshot of snapshots) {
+        snapshot.node.style.position = 'absolute'
+        snapshot.node.style.left = `${snapshot.x}px`
+        snapshot.node.style.top = `${snapshot.y}px`
+        snapshot.node.style.width = `${snapshot.width}px`
+        snapshot.node.style.height = `${snapshot.height}px`
+        snapshot.node.style.margin = '0'
+        snapshot.node.dataset.dragsoloSticked = 'true'
+    }
+
+    return snapshots
+}
 
 // Initialization code for DragSolo based on script attributes.
 document.addEventListener("DOMContentLoaded", (event) => {

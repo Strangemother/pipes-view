@@ -201,8 +201,11 @@ const runPipes = function(conf) {
     window.pipesTool = pipesTool
 
 
+    stickAll('.box');
+
     dragSolo = new DragSolo()
     dragSolo.enable('.box')
+    
 
     window.dragSolo = dragSolo
 }
