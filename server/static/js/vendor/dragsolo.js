@@ -107,8 +107,8 @@ class Draggable {
             this.host.tracking.add(this)
             this.node.dataset.dragging = 'dragging'
             Object.assign(this.space, {
-                offsetY: e.offsetY + node.parentNode.offsetTop
-                , offsetX: e.offsetX + node.parentNode.offsetLeft
+                offsetX: e.clientX - node.offsetLeft
+                , offsetY: e.clientY - node.offsetTop
             })
         } else {
             console.log('Will not mousedownEvent', node, this.node)
