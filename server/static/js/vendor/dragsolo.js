@@ -201,6 +201,39 @@ const getParentClientOrigin = function(dragParent) {
 }
 
 
+const isResizeHandleEvent = function(node, event) {
+    if(node == null) {
+        return false
+    }
+
+    let style = window.getComputedStyle(node)
+    if(style.resize == 'none') {
+        return false
+    }
+
+    let rect = node.getBoundingClientRect()
+    let handleSize = 18
+    let nearRight = event.clientX >= (rect.right - handleSize)
+    let nearBottom = event.clientY >= (rect.bottom - handleSize)
+    let nearLeft = event.clientX <= (rect.left + handleSize)
+    let nearTop = event.clientY <= (rect.top + handleSize)
+
+    if(style.resize == 'both') {
+        return nearRight && nearBottom
+    }
+
+    if(style.resize == 'horizontal') {
+        return nearRight || nearLeft
+    }
+
+    if(style.resize == 'vertical') {
+        return nearBottom || nearTop
+    }
+
+    return false
+}
+
+
 class DragSolo {
 
     /**
@@ -261,11 +294,17 @@ class DragSolo {
         let body = document.body
 
         let mousedown = function(event){
-            let node = event.target
-            host.mouseTrack = true
+            let node = event.target.closest('[data-draggable-id]') || event.target
             // console.log('mouseDown', node)
             let dn = host.nodes[node.dataset.draggableId]
             if(dn != undefined) {
+                if(isResizeHandleEvent(dn.node, event)) {
+                    host.mouseTrack = false
+                    body.dataset.draghost='resize'
+                    return
+                }
+
+                host.mouseTrack = true
                 // console.log('Drag', dn)
                 dn.mousedownEvent(event, node)
                 body.dataset.draghost='mousedown'
