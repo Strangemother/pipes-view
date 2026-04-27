@@ -210,7 +210,8 @@ const runPipes = function(conf) {
 
         window.dragSolo = dragSolo;
         document.querySelectorAll('.box').forEach((n)=>{
-            n.style.position = 'absolute'
+            // n.style.position = 'absolute'
+            n.classList.add('drag-ready')
         })
     }, 500)
 }

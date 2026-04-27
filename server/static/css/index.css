@@ -493,7 +493,7 @@ html.layer-space-container {
     width: 10em;
     height: 6em;
     border-radius: .5em;
-    margin: 1em;
+    /* margin: 1em; */
     /* position: relative; */
     /* position: absolute; */
 }
@@ -503,8 +503,20 @@ html.layer-space-container {
     justify-content: center;
     align-items: center;
     /* font-size: 3em; */
+    resize: both;
+    overflow: auto;
 }
 
 .panspace-container .box .number {
     font-size: 2em;
+    resize: both;
+}
+
+.panspace-container {
+    display: flex;
+    gap: 1em;
+}
+
+.box.drag-ready {
+    position: absolute;
 }

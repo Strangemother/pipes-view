@@ -327,7 +327,7 @@ class DragSolo {
 
 
 const stickAll = function(selector) {
-    /* given a selector, write the existing real position 
+    /* given a selector, write the existing real position
     of all nodes so they can be tracked from their initial position.
 
     This allows divs to have a page position, and then activate dragging will not cause them to jump to the top-left corner.
@@ -347,12 +347,12 @@ const stickAll = function(selector) {
     })
 
     for(let snapshot of snapshots) {
-        snapshot.node.style.position = 'absolute'
+        // snapshot.node.style.position = 'absolute'
         snapshot.node.style.left = `${snapshot.x}px`
         snapshot.node.style.top = `${snapshot.y}px`
         snapshot.node.style.width = `${snapshot.width}px`
         snapshot.node.style.height = `${snapshot.height}px`
-        snapshot.node.style.margin = '0'
+        // snapshot.node.style.margin = '0'
         snapshot.node.dataset.dragsoloSticked = 'true'
     }
 
