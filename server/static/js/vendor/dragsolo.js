@@ -30,6 +30,7 @@ class Draggable {
             , offsetX: 0
             , offsetY: 0
         }
+        this.dragParent = null
     }
 
     /**
@@ -102,14 +103,19 @@ class Draggable {
     mousedownEvent(e, node) {
         // copy the node position into this position when moved.
         if(this.node == node) {
+            let rect = node.getBoundingClientRect()
             this.tracking = true
             console.log('mousedown', this.id())
             this.host.tracking.add(this)
+            this.dragParent = node.offsetParent || document.documentElement
             this.node.dataset.dragging = 'dragging'
             Object.assign(this.space, {
-                offsetX: e.clientX - node.offsetLeft
-                , offsetY: e.clientY - node.offsetTop
+                clientX: e.clientX
+                , clientY: e.clientY
+                , offsetX: e.clientX - rect.left
+                , offsetY: e.clientY - rect.top
             })
+            this.presentSpaceXY()
         } else {
             console.log('Will not mousedownEvent', node, this.node)
         }
@@ -150,6 +156,7 @@ class Draggable {
             this.node.dataset.dragging = ''
             // this.presentSpaceXY()
             this.tracking = false
+            this.dragParent = null
             this.host.tracking.delete(this)
         }
     }
@@ -158,8 +165,12 @@ class Draggable {
      * Updates the position of the draggable element based on its current space.
      */
     presentSpaceXY() {
-        let x = this.space.clientX - this.space.offsetX
-        let y = this.space.clientY - this.space.offsetY
+        let dragParent = this.dragParent || this.node.offsetParent || document.documentElement
+        let parentRect = dragParent.getBoundingClientRect()
+        let parentLeft = parentRect.left + dragParent.clientLeft - dragParent.scrollLeft
+        let parentTop = parentRect.top + dragParent.clientTop - dragParent.scrollTop
+        let x = this.space.clientX - parentLeft - this.space.offsetX
+        let y = this.space.clientY - parentTop - this.space.offsetY
         this.setNodeXY(x, y)
 
         for(let cf of this.onChangeHooks) {
