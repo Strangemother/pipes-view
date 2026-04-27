@@ -45,9 +45,6 @@ const runIndexApp = function() {
     const app = createUIApp('#mini_app');
     window.app = app;
 
-    window.nodesApp = createNodesApp('#panspace_container')
-
-
     // from pipes-winbox-app.js
     runPipes({
         backLayerSelector: '.canvas-container.back canvas'

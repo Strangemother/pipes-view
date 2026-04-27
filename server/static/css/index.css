@@ -486,3 +486,25 @@ html.layer-space-container {
     max-width: 1000px;
     margin: auto;
 }
+
+.panspace-container .box {
+    /* border: solid 1px red; */
+    background: #111;
+    width: 10em;
+    height: 6em;
+    border-radius: .5em;
+    margin: 1em;
+    position: relative;
+    position: absolute;
+}
+
+.panspace-container .box {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    /* font-size: 3em; */
+}
+
+.panspace-container .box .number {
+    font-size: 2em;
+}

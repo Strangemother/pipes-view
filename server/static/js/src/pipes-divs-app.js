@@ -190,11 +190,20 @@ const runPipes = function(conf) {
 
 
     // Drag and zoom functionality.
-    const infiniteDrag = new WinboxInfiniteDrag(conf.dragspaceSelector || 'main')
+
+    const infiniteDrag = new ZoomableInfiniteDrag(
+            conf.dragspaceSelector || 'main',
+            '.box'
+            )
 
     /* Convenience tool. */
     const pipesTool = new PipesTool();
     window.pipesTool = pipesTool
 
+
+    dragSolo = new DragSolo()
+    dragSolo.enable('.box')
+
+    window.dragSolo = dragSolo
 }
 

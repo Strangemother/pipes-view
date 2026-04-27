@@ -2,7 +2,12 @@
 
 */
 
-const spawnWindow = function(conf={}) {
+
+const spawnWindow = function(d){
+    console.log('Spawn window not implmented', d)
+}
+
+const spawnWinboxWindow = function(conf={}) {
     /* Generally called by the UI button or can be called manually.
     Create a new winbox window and bind the new interals with a
     Vue app.
@@ -165,6 +170,10 @@ const createUIApp = function(mountSelector='#mini_app') {
 
         , spawnWindow(conf={name: this.newPanelName}) {
 
+            // let r = this.windowMap[conf.name] = spawnWinboxWindow(conf)
+            // return r
+
+
             let r = this.windowMap[conf.name] = spawnWindow(conf)
             return r
         }
@@ -197,6 +206,31 @@ const createUIApp = function(mountSelector='#mini_app') {
 
     const res = PetiteVue.createApp(app)
     listenEvent('focusnode', app.onFocusNode.bind(app))
+    res.mount(mountSelector)
+    return app
+};
+
+
+
+const createNodesApp = function(mountSelector='#panspace_container') {
+    /*
+        This Vue app maintains the ui clickable buttons
+        and the windows made by winbox.
+
+        exposed as `app`.
+     */
+    let app = {
+        // cacheCopy: reactive(cache)
+        // , messages: reactive([])
+        // , partialState: reactive({
+        //     status: "waiting"
+        //     , counter: 0
+        // })
+        newPanelName: "label"
+    }
+
+    const res = PetiteVue.createApp(app)
+
     res.mount(mountSelector)
     return app
 };
