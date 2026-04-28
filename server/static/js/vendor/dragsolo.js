@@ -386,7 +386,11 @@ const stickAll = function(selector) {
 
     This allows divs to have a page position, and then activate dragging will not cause them to jump to the top-left corner.
     */
-    let nodes = Array.from(document.querySelectorAll(selector))
+
+    let nodes = [selector];
+    if(typeof(selector) == 'string') {
+        nodes = Array.from(document.querySelectorAll(selector))
+    }
     let snapshots = nodes.map(function(node) {
         let rect = node.getBoundingClientRect()
         let parentOrigin = getParentClientOrigin(node.offsetParent || document.documentElement)

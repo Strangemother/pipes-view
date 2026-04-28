@@ -85,6 +85,14 @@ class InfiniteDrag {
     _applyDelta(dx, dy) {
         const nodes = this.element.querySelectorAll(this.itemSelector)
         nodes.forEach(node => {
+            if(node.classList.contains('no-pan')) {
+                /*
+                    This allows dragging but not panning of a div in a space.
+                    A User can still drag with this div, using the _right click_
+                    pan, but also dragging the target div.
+                 */
+                return
+            }
             const left = parseFloat(node.style.left) || 0
             const top = parseFloat(node.style.top) || 0
             node.style.left = `${left + dx}px`

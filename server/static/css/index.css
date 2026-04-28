@@ -530,3 +530,11 @@ html.layer-space-container {
 .box .display-panel .content-value {
     padding: 0;
 }
+
+.box.drag-ready.executing {
+    background: #020202;
+}
+
+.box.focus {
+    background: #1a1006;
+}

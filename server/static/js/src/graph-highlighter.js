@@ -29,6 +29,9 @@ class GraphHighlighter {
     }
 
     _getWin(name) {
+        if(this.app.getGraphNodeElement) {
+            return this.app.getGraphNodeElement(name)
+        }
         return this.app.windowMap[name]
     }
 
@@ -81,14 +84,30 @@ class GraphHighlighter {
         if(this._cyclePrev) {
             for(const name of this._cyclePrev) {
                 const win = this._getWin(name)
-                if(win) { win.removeClass(this.cycleClass) }
+                if(win) {
+                    if(win.removeClass){
+                        win.removeClass(this.cycleClass)
+                    } else {
+                        win.classList.remove(this.cycleClass)
+                    }
+                } else {
+                    console.warn('Cannot change class of a missing element: ', name)
+                }
             }
         }
 
         // Light the current frontier
         for(const name of this._cycleFrontier) {
             const win = this._getWin(name)
-            if(win) { win.addClass(this.cycleClass) }
+            if(win) {
+                if(win.addClass){
+                    win.addClass(this.cycleClass)
+                } else {
+                    win.classList.add(this.cycleClass)
+                }
+            } else {
+                console.warn('Cannot change class of a missing element: ', name)
+            }
         }
 
         // Compute next frontier dynamically from outgoing connections
@@ -160,7 +179,16 @@ class GraphHighlighter {
             if(!group) { continue }
             for(const name of group) {
                 const win = this._getWin(name)
-                if(win) { win.removeClass(this.cycleClass) }
+
+                if(win) {
+                    if(win.removeClass){
+                        win.removeClass(this.cycleClass)
+                    } else {
+                        win.classList.remove(this.cycleClass)
+                    }
+                } else {
+                    console.warn('Cannot change class of a missing element: ', name)
+                }
             }
         }
         this._cycleFrontier = []

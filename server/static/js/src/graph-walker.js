@@ -144,7 +144,13 @@ class GraphWalker {
         }
 
         const win = this.windows[name]
-        return win || null
+
+
+        if(win == null && this.conf.app.getGraphNodeElement) {
+        	return this.conf.app.getGraphNodeElement(name)
+        }
+
+        return run
 
     }
 

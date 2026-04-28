@@ -1,5 +1,5 @@
 {% raw %}
-<div class="display-panel">
+<div class="display-panel" tabindex="0" @focusin="panelFocus(event, box)" :id="'node_' + box.name">
 
     <div class="content">
         <div class="inbound pips">

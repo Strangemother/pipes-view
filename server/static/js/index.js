@@ -3,42 +3,6 @@
 Connect to the backend, start receiving socket info.
  */
 
-// const url = 'ws://localhost:8765'
-const uuid = Math.random().toString(32).slice(2)
-
-
-let connectSocket = function(endpoint) {
-    console.log('new socket')
-    let ws = new WebSocket(endpoint)
-
-    ws.onmessage = async function(ev){
-        await recvJSONEvent(ev)
-    }
-
-    ws.onopen = async function(ev){
-        console.log("open", ev)
-        app.messages.push({ type: 'socket', text: 'connected' })
-        app.cacheCopy.socketConnected = true
-        await sendFirstMessage()
-    }
-
-
-    ws.onerror = function(ev){
-        app.messages.push({ type: 'socket', text: 'error' })
-        console.error(ev)
-    }
-
-
-    ws.onclose = function(ev){
-        app.messages.push({ type: 'socket', text: 'closed' })
-        console.log("closed", ev)
-        app.cacheCopy.socketConnected = false;
-    }
-
-    return ws
-}
-
-
 const runIndexApp = function() {
 
     // from pipes-ui-app.js
@@ -60,23 +24,36 @@ const runIndexApp = function() {
         bootDemoGraph()
     } catch {}
 
-    // return;
-
     setTimeout(function(){
-
-        stickAll('.panspace-container');
-        stickAll('.box');
-
-        dragSolo = new DragSolo()
-        dragSolo.enable('.box')
-
-        window.dragSolo = dragSolo;
-
-        document.querySelectorAll('.box').forEach((n)=>{
-            // n.style.position = 'absolute'
-            n.classList.add('drag-ready')
-        })
+        startDragging()
     }, 1000)
+}
+
+
+const startDragging = function(){
+
+    stickAll('.panspace-container');
+    stickAll('.box');
+
+    dragSolo = new DragSolo()
+    dragSolo.enable('.box')
+
+    window.dragSolo = dragSolo;
+
+    document.querySelectorAll('.box').forEach((n)=>{
+        // n.style.position = 'absolute'
+        n.classList.add('drag-ready')
+    })
+}
+
+const enableDragging = function(item, allowPan=true){
+    stickAll(item);
+    dragSolo.enable(item)
+    item.classList.add('drag-ready')
+    if(!allowPan) {
+        item.classList.add('no-pan')
+    }
+
 }
 
 

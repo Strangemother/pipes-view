@@ -22,7 +22,7 @@ class PipesTool {
         } catch{}
 
         this.app = conf.app || app
-        this.walker = conf.walker || new GraphExecutor({ taskMap: T })
+        this.walker = conf.walker || new GraphExecutor({ app: this.app, taskMap: T })
         this.lights = new GraphHighlighter({ app: this.app, walker: this.walker })
         this.layerGroup = conf.layerGroup || clItems
     }
