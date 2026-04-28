@@ -56,7 +56,27 @@ const runIndexApp = function() {
     })
 
     // from graph-demo.js
-    bootDemoGraph()
+    try {
+        bootDemoGraph()
+    } catch {}
+
+    // return;
+
+    setTimeout(function(){
+
+        stickAll('.panspace-container');
+        stickAll('.box');
+
+        dragSolo = new DragSolo()
+        dragSolo.enable('.box')
+
+        window.dragSolo = dragSolo;
+
+        document.querySelectorAll('.box').forEach((n)=>{
+            // n.style.position = 'absolute'
+            n.classList.add('drag-ready')
+        })
+    }, 1000)
 }
 
 

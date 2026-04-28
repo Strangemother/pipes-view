@@ -103,6 +103,10 @@ class Draggable {
     mousedownEvent(e, node) {
         // copy the node position into this position when moved.
         if(this.node == node) {
+            if(e.target.classList.contains('dragsolo-bubble')) {
+                // ignore bubbled events.
+                return
+            }
             let rect = node.getBoundingClientRect()
             this.tracking = true
             console.log('mousedown', this.id())
@@ -171,9 +175,20 @@ class Draggable {
         let y = this.space.clientY - parentOrigin.top - this.space.offsetY
         this.setNodeXY(x, y)
 
+        document.dispatchEvent(new CustomEvent('dragmove', {
+            detail: {
+                position: {x,y}
+                , dragParent
+                , parentOrigin
+                , space: this.space
+                , node: this.node
+                , draggable: this
+            }
+        }))
         for(let cf of this.onChangeHooks) {
             cf({x,y})
         }
+
     }
 
     /**

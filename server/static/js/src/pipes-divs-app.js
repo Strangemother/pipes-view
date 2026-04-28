@@ -200,19 +200,5 @@ const runPipes = function(conf) {
     const pipesTool = new PipesTool();
     window.pipesTool = pipesTool
 
-
-    setTimeout(function(){
-
-        stickAll('.box');
-
-        dragSolo = new DragSolo()
-        dragSolo.enable('.box')
-
-        window.dragSolo = dragSolo;
-        document.querySelectorAll('.box').forEach((n)=>{
-            // n.style.position = 'absolute'
-            n.classList.add('drag-ready')
-        })
-    }, 500)
 }
 

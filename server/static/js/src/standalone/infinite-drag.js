@@ -90,6 +90,13 @@ class InfiniteDrag {
             node.style.left = `${left + dx}px`
             node.style.top = `${top + dy}px`
         })
+
+        document.dispatchEvent(new CustomEvent('panspace', {
+            detail: {
+                position: {dx,dy}
+                , element: this.element
+            }
+        }))
     }
 
     destroy() {
@@ -202,6 +209,18 @@ class ZoomableInfiniteDrag extends InfiniteDrag {
             el.className = el.className.replace(/\bfont-size-\d+(\.\d+)?em\b/g, '')
             el.classList.add(`font-size-${fontSizeScale}em`)
         }
+
+
+        document.dispatchEvent(new CustomEvent('zoomspace', {
+            detail: {
+                mouseX
+                , mouseY
+                , element: this.element
+                , scale
+                , prevScale
+                , origin
+            }
+        }))
     }
 
     destroy() {

@@ -13,6 +13,14 @@ def main():
 def hello_world():
     return render_template('index.html')
 
+@app.route("/winbox/")
+def winbox_view():
+    return render_template('index-winbox.html')
+
+@app.route("/drag-pan-zoom/")
+def drag_pan_zoom():
+    return render_template('index-dragsolo-infinitedrag.html')
+
 
 if __name__ == '__main__':
     main()

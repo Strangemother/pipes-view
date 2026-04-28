@@ -15,8 +15,14 @@ class PipesTool {
     //  user tool to access all the bits easily.
     filename = 'pipes-tool-graph'
     constructor(conf={}) {
+
+        let T = {}
+        try{
+            T = new WorkTasks
+        } catch{}
+
         this.app = conf.app || app
-        this.walker = conf.walker || new GraphExecutor({ taskMap: new WorkTasks() })
+        this.walker = conf.walker || new GraphExecutor({ taskMap: T })
         this.lights = new GraphHighlighter({ app: this.app, walker: this.walker })
         this.layerGroup = conf.layerGroup || clItems
     }

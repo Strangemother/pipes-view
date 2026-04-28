@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="en" class="layer-space-container">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="https://cdn.jsdelivr.net/npm/polyclass@latest/dist/polyclass.browser-full.js"></script>
+    <link rel="stylesheet" href="../static/css/index.css">
+    <title>Cluster</title>
+</head>
+
+<body polyclass class='background-#222
+                        color-#DDD
+                        margin-0
+                        layer-space-container
+                        font-pack-lexend+deca-500
+                        font-lexend+deca-500 letter-spacing-.1px'>
+
+    <header class='primary background-#111'>
+        <div class="logo padding-1em
+                    font-size-1rem">Strangemother</div>
+    </header>
+
+    <div class="layer-space">
+
+        <main>
+            <header>
+                <h1 class="title
+                            text-align-center
+                            font-size-2rem">
+                    Drag + Zoom + Pan
+                </h1>
+            </header>
+
+            <div class="page-content">
+                <p>DragSolo provides draggable nodes, activated when you're ready.</p>
+            </div>
+
+            <div class="page-content">
+                <div class="panspace-container" id="panspace_container">
+                    <div class="box">
+                        <div class="number">1</div>
+                    </div>
+                    <div class="box">
+                        <div class="number">2</div>
+                    </div>
+                    <div class="box">
+                        <div class="number">3</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="page-content">
+                <ul>
+                    <li>Drag</li>
+                    <li>Resize</li>
+                    <li>Zoom</li>
+                    <li>Pan</li>
+                </ul>
+                <p>Each feature is distinct and is prepared <em>late</em> to capture your layout after the site is ready.</p>
+            </div>
+
+            <div class="page-content">
+                <div class="panspace-container" id="panspace_container_2">
+                    <div class="box">
+                        <div class="number">1</div>
+                    </div>
+                    <div class="box">
+                        <div class="number">2</div>
+                    </div>
+                    <div class="box">
+                        <div class="number">3</div>
+                    </div>
+                </div>
+            </div>
+        </main>
+
+    </div>
+
+    {# include "./mini-app.html" #}
+
+    <script src="../static/js/vendor/petite-vue.iife.js"></script>
+    <script src="../static/js/vendor/dragsolo.js"></script>
+
+    <script src="../static/js/src/standalone/infinite-drag.js"></script>
+
+    <script src="../static/js/src/pipe-events.js"></script>
+
+    <script src="../static/js/pipes-ui-app.js"></script>
+    <script src="../static/js/index-drag-pan-zoom.js"></script>
+
+</body>
+</html>
+
+

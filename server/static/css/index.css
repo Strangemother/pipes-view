@@ -490,8 +490,8 @@ html.layer-space-container {
 .panspace-container .box {
     /* border: solid 1px red; */
     background: #111;
-    width: 10em;
-    height: 6em;
+    min-width: 10em;
+    min-height: 6em;
     border-radius: .5em;
     /* margin: 1em; */
     /* position: relative; */
@@ -503,8 +503,8 @@ html.layer-space-container {
     justify-content: center;
     align-items: center;
     /* font-size: 3em; */
-    resize: both;
-    overflow: auto;
+    /* resize: both; */
+    /* overflow: auto; */
 }
 
 .panspace-container .box .number {
@@ -514,9 +514,19 @@ html.layer-space-container {
 
 .panspace-container {
     display: flex;
-    gap: 1em;
+    gap: 3em;
 }
 
 .box.drag-ready {
     position: absolute;
+    resize: both;
+    overflow: auto;
+}
+
+.box .draggable-pip {
+    height: 1.4em;
+}
+
+.box .display-panel .content-value {
+    padding: 0;
 }
