@@ -307,6 +307,7 @@ const createNodesApp = function(mountSelector='#panspace_container') {
         , connect(sender, receiver, line={}) {
             // console.log('Connect from', sender, 'to: ', receiver)
             line.color = line.color || this.randomColor()
+            line.width = line.width || ( Math.random() * 8 ).toFixed(0)
             document.dispatchEvent(new CustomEvent('connectnodes', {
                     detail: {
                         sender

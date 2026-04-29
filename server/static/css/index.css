@@ -26,112 +26,6 @@ li.form-list-item {
     padding: 0.3em 1em;
 }
 
-ul.available-list {
-    list-style: none;
-    padding: 0;
-}
-
-li.available-list-item a {
-    color: inherit;
-    text-decoration: none;
-    line-height: 1.5em;
-}
-
-
-.model-item a[data-running="true"] {
-    /* border-color: #3c563c; */
-    /* background: #1a241f; */
-    /* gap: 0.5em; */
-    /* align-items: center; */
-}
-
-.model-item a {
-    border: solid 2px;
-    padding: 0.4em 0.7em;
-    display: flex;
-    margin: 0em 0;
-    border-color: #0a0a0a;
-    background: #111;
-    border-radius: 0.3em;
-    gap: 0.5em;
-    align-items: center;
-}
-
-span.running-indicator {
-    /* border: solid 2px #444; */
-    width: 0.9em;
-    height: 0.9em;
-    display: block;
-    border-radius: 10em;
-    margin: 0 0.4em;
-    background: #333;
-}
-
-
-*[data-running=true] span.running-indicator {
-    background: #329932;
-}
-
-
-ul.models {
-    list-style: none;
-    margin: 0;
-    padding: 0;
-    display: flex;
-    flex-wrap: wrap;
-    gap: 0.6em 0.7em;
-}
-
-.model-item span.info {
-    display: flex;
-    flex-direction: column;
-}
-
-.model-item span.info .model-model {
-    color: #777;
-}
-
-
-li.message-item {
-    /* border: solid 1px #111; */
-    background: #111;
-    border-radius: 0.6em;
-    margin: 0.4em 1em;
-    /* min-width: 40em; */
-}
-
-div#presenter {
-    padding: 0.6em 1em;
-}
-
-ul.message-list {
-    /* margin: 0; */
-    list-style: auto;
-    flex-direction: row-reverse;
-    display: flex;
-    flex-direction: column-reverse;
-}
-
-
-.connected-indicator > * {
-    display: none;
-}
-
-.connected-indicator {
-    background: #000;
-    display: inline-block;
-    width: 1em;
-    height: 1em;
-    padding: 0;
-    margin: 0;
-    border-radius: 5em;
-}
-
-.socket-info {
-    display: flex;
-    align-items: center;
-    gap: 0.4em;
-}
 
 input[type=text], textarea {
     background: #333;
@@ -140,40 +34,6 @@ input[type=text], textarea {
     font: inherit;
 }
 
-.connected-indicator[data-connected="true"] {
-    background: green;
-}
-
-.socket-info input[type=text] {
-    padding: 0.4em 0.5em;
-}
-
-input[type=text]:focus, textarea:focus {
-    outline: none;
-    background: #222;
-}
-
-.message-item .type {
-    border-radius: 0.6em 0.6em 0em 0em;
-    background: #0a0a0a;
-    padding: 0.3em 0.8em;
-    color: #555;
-}
-
-.message-item > span, #presenter {
-    padding: 0.5em 1em 0.7em;
-    display: flex;
-    white-space: break-spaces;
-    color: hsl(199deg 27% 59%);
-}
-
-li.message-item.assistant {
-    margin-left: 33%;
-}
-
-li.message-item.user {
-    margin-right: 33%;
-}
 
 .widthed {
     max-width: 72rem;
@@ -181,47 +41,10 @@ li.message-item.user {
 }
 
 
-li.presenter-item.waiting {
-    display: none;
-}
-
-.presenter-item textarea {
-    padding: 0.4em 0em 0.5em;
-    /* border-radius: 0em 0 0.7em 0.7em; */
-    width: 95%;
-    margin: 0 1em;
-    background: inherit;
-}
-
-.presenter-item textarea:focus {
-    background: #0b0b0b;
-}
-
-select#model-choice {
-    color: inherit;
-    background: inherit;
-    font: inherit;
-    padding: 0.2em 0.6em 0.2em 0.4em;
-    border-radius: 0.4em;
-    max-width: 18em;
-}
-
 option {
     background-color: #222;
 }
 
-ul.socket-info {
-    list-style: none;
-}
-
-
-.message-list li.message-item.system {
-    background: transparent;
-}
-
-.message-list li.message-item.system .type {
-    background: inherit;
-}
 
 .display-panel .header {
     /* padding: 0.5em 1.6rem; */
@@ -264,8 +87,11 @@ ul.socket-info {
     display: flex;
     flex-direction: column;
     flex-grow: 1;
-    height: 100%;
+    /* height: 100%; */
     /* outline: solid; */
+    border: solid 2px transparent;
+    border-radius: 0.5em;
+    /* border: inset; */
 }
 
 .example-window {
@@ -347,17 +173,6 @@ html.layer-space-container {
     height: 100%;
 }
 
-.test-indicator-container {
-    justify-content: center;
-    align-items: center;
-    display: flex;
-}
-
-.fore .test-indicator {
-    background: orange;
-    width: 1em;
-    height: 1em;
-}
 
 .layer-space main {
     z-index: 3;
@@ -385,8 +200,8 @@ html.layer-space-container {
 
 
 .node-cycle .display-panel {
-    outline: solid 2px #ff7707;
-    outline-offset: -2px;
+    /* border: solid 2px #ff7707; */
+    /* outline-offset: 0px; */
 }
 
 .node-cycle.node-highlight .display-panel {
@@ -394,72 +209,6 @@ html.layer-space-container {
     outline-offset: -2px;
 }
 
-.admin-bar {
-    display: flex;
-    background: #111;
-    /* padding: 0.6em; */
-    /* gap: 1em; */
-}
-
-.admin-bar a {
-    color: inherit;
-}
-
-.admin-bar .spacer {
-    flex-grow: 1;
-}
-
-
-
-.admin-bar .group {
-    display: flex;
-    border: solid 2px #242424;
-    gap: 1em;
-    align-items: center;
-    padding: 0.7em 0.8em 0.8em;
-    border-radius: 0.4em;
-    border-top: none;
-    border-bottom: none;
-    border-radius: 0;
-}
-
-.admin-bar .group > label {
-    flex-wrap: nowrap;
-    flex-direction: row;
-    gap: .4em;
-}
-
-.admin-bar .group a {
-    text-decoration: none;
-    padding: 0.4em 1em;
-    background: #080808;
-    border-radius: 0.3em;
-    color: #aaa;
-    font-size: 0.9em;
-}
-
-.admin-bar .group .label {
-    color: #999;
-    padding: 0 0em;
-}
-
-.admin-bar .group + .group {
-    border-left: none;
-}
-
-.admin-bar .inline-input {
-    gap: 0;
-    display: flex;
-}
-
-.admin-bar .inline-input input {
-    border-radius: .4em 0em 0em .4em;
-    padding-left: 0.6em;
-}
-
-.admin-bar .inline-input a {
-    border-radius: 0em  .4em .4em 0em;
-}
 
 .winbox {
     border-radius: 0.5em;
@@ -485,56 +234,4 @@ html.layer-space-container {
 .page-content {
     max-width: 1000px;
     margin: auto;
-}
-
-.panspace-container .box {
-    /* border: solid 1px red; */
-    background: #111;
-    min-width: 10em;
-    min-height: 6em;
-    border-radius: .5em;
-    /* margin: 1em; */
-    /* position: relative; */
-    /* position: absolute; */
-}
-
-.panspace-container .box {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    /* font-size: 3em; */
-    /* resize: both; */
-    /* overflow: auto; */
-}
-
-.panspace-container .box .number {
-    font-size: 2em;
-    resize: both;
-}
-
-.panspace-container {
-    display: flex;
-    gap: 3em;
-}
-
-.box.drag-ready {
-    position: absolute;
-    resize: both;
-    overflow: auto;
-}
-
-.box .draggable-pip {
-    height: 1.4em;
-}
-
-.box .display-panel .content-value {
-    padding: 0;
-}
-
-.box.drag-ready.executing {
-    background: #020202;
-}
-
-.box.focus {
-    background: #1a1006;
 }

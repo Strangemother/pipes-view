@@ -148,8 +148,9 @@ class CanvasLayerGroup {
                         ?? style.lineDesign
                         ?? obj.lineDesign
                         ?? obj.lineStyle
+                        ;
 
-        return { color, design }
+        return Object.assign({}, line, { color, design })
     }
 
     draw(){
@@ -221,7 +222,8 @@ class CanvasLayerGroup {
                 senderDirection,
                 receiverDirection,
                 lineColor: lineConfig.color,
-                lineDesign: lineConfig.design
+                lineDesign: lineConfig.design,
+                obj: lineConfig
             })
         }
 
@@ -239,7 +241,8 @@ class CanvasLayerGroup {
                 senderDirection: directions.senderDirection,
                 receiverDirection: directions.receiverDirection,
                 lineColor: directions.lineColor,
-                lineDesign: directions.lineDesign
+                lineDesign: directions.lineDesign,
+                obj: directions.obj
             }
             perfLog('Installing line.')
             this.layers[1].addLine(tidyLine)
@@ -252,6 +255,7 @@ class CanvasLayerGroup {
         tidyLine.receiverDirection = directions.receiverDirection
         tidyLine.lineColor = directions.lineColor
         tidyLine.lineDesign = directions.lineDesign
+        tidyLine.obj = directions.obj
     }
 
 }
@@ -303,6 +307,7 @@ class CanvasLayer {
         this.lines[tidyLine._id] = tidyLine
     }
 
+    groupRender = true
     renderFrame(delta){
         const ctx = this.ctx
         const frameStart = PERF_DEBUG ? performance.now() : 0
@@ -320,13 +325,25 @@ class CanvasLayer {
             , 's-curve': drawSCurveLinesWithTipDirection
         }
 
-        let groups = this.groupLinesByDesignAndColor(lineItems)
-        for(let groupKey in groups) {
-            let group = groups[groupKey]
-            let func = gmap[group.design] || gmap['s-curve']
-            // this.drawSCurveLines(ctx, group.lines, group.color)
-            func.call(this, ctx, group.lines, group.color)
+        if(this.groupRender) {
+
+            let groups = this.groupLinesByDesignAndColor(lineItems)
+            for(let groupKey in groups) {
+                let group = groups[groupKey]
+                let func = gmap[group.design] || gmap['s-curve']
+                // this.drawSCurveLines(ctx, group.lines, group.color)
+                func.call(this, ctx, group.lines, group.color)
+            }
+        } else {
+            lineItems.forEach((group)=>{
+                // let group = groups[groupKey]
+                let func = gmap[group.design] || gmap['s-curve']
+                // this.drawSCurveLines(ctx, group.lines, group.color)
+                func.call(this, ctx, group.lines, group.obj.color)
+            })
+
         }
+
 
         if(PERF_DEBUG) {
             perfLog('frame(ms)',
