@@ -3,26 +3,52 @@
 Connect to the backend, start receiving socket info.
  */
 
+class MyPipes extends PipesTool {
+    /* This centralises the user setup.
+    It contains a walker (executor), lights, config, and any user hooks and
+    addons. */
+    constructor(conf={}) {
+        super(conf)
+    }
+
+    buildPipesCanvas(){
+        let conf = this.conf;
+       let backName = conf.backLayerSelector || '.canvas-container.back canvas'
+       let foreName = conf.foreLayerSelector || '.canvas-container.fore canvas'
+
+        const backLayer = new CanvasLayer(backName)
+        const foreLayer = new CanvasLayer(foreName)
+
+        // dirty for now.
+        const clItems = new CanvasLayerGroup(backLayer, foreLayer)
+        window.clItems = clItems
+        this.layerGroup = clItems
+
+    }
+}
+
+
+const pipesConfig = Object.assign({
+    backLayerSelector: '.canvas-container.back canvas'
+    , foreLayerSelector: '.canvas-container.fore canvas'
+    , dragspaceSelector: 'main'
+}, connectionsData)
+
+
 const runIndexApp = function() {
 
-    // from pipes-ui-app.js
-    const app = createUIApp('#mini_app');
-    window.app = app;
+    window.app = createUIApp('#mini_app', connectionsData);
 
-    window.nodesApp = createNodesApp('#panspace_container')
+    window.myPipes = new MyPipes(pipesConfig)
+    myPipes.buildPipesCanvas()
+
+    window.pipesTool = myPipes
 
 
-    // from pipes-winbox-app.js
-    runPipes({
-        backLayerSelector: '.canvas-container.back canvas'
-        , foreLayerSelector: '.canvas-container.fore canvas'
-        , dragspaceSelector: 'main'
-    })
+    window.nodesApp = createNodesApp('#panspace_container', connectionsData)
 
-    // from graph-demo.js
-    try {
-        bootDemoGraph()
-    } catch {}
+    // // from pipes-winbox-app.js
+    // runPipes(pipesConfig)
 
     setTimeout(function(){
         startDragging()
@@ -31,20 +57,25 @@ const runIndexApp = function() {
 
 
 const startDragging = function(){
+    let dragSpace = pipesConfig.dragspaceSelector || 'main';
+    let dragSpaceBox = '.box'
+
+    const infiniteDrag = new ZoomableInfiniteDrag(dragSpace, dragSpaceBox)
 
     stickAll('.panspace-container');
-    stickAll('.box');
+    stickAll(dragSpaceBox);
 
     dragSolo = new DragSolo()
-    dragSolo.enable('.box')
+    dragSolo.enable(dragSpaceBox)
 
     window.dragSolo = dragSolo;
 
-    document.querySelectorAll('.box').forEach((n)=>{
+    document.querySelectorAll(dragSpaceBox).forEach((n)=>{
         // n.style.position = 'absolute'
         n.classList.add('drag-ready')
     })
 }
+
 
 const enableDragging = function(item, allowPan=true){
     stickAll(item);

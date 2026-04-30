@@ -392,7 +392,7 @@ class CanvasLayer {
             let design = this.getLineDesign(line)
             let color = this.getLineColor(line)
             let width = line.obj.width
-
+            
             let key = `${design}::${color}::${width}`
 
             if(groups[key] == undefined) {

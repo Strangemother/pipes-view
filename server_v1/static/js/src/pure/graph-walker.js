@@ -14,11 +14,11 @@ class GraphWalker {
 	constructor(conf={}) {
 		this.connections = conf.connections || pipeData.connections
 		this.conf = conf
-		// this.nodes = conf.nodes || app.windowMap
+		// this.windows = conf.windows || app.windowMap
 	}
 
-	get nodes() {
-		return this.conf.nodes || app.windowMap
+	get windows() {
+		return this.conf.windows || app.windowMap
 	}
 
 	getConnections(name) {
@@ -89,8 +89,8 @@ class GraphWalker {
 			return null
 		}
 
-		const senderWindow = this.nodes[fromName]
-		const receiverWindow = this.nodes[toName]
+		const senderWindow = this.windows[fromName]
+		const receiverWindow = this.windows[toName]
 		if(senderWindow == undefined || receiverWindow == undefined) {
 			console.error('Cannot create connection; unknown window label.', { fromName, toName })
 			return null
@@ -143,7 +143,7 @@ class GraphWalker {
             return null
         }
 
-        const win = this.nodes[name]
+        const win = this.windows[name]
 
 
         if(win == null && this.conf.app.getGraphNodeElement) {
@@ -169,8 +169,8 @@ class GraphWalker {
 class LocalStorageGraphWalker extends GraphWalker {
 	exportJSON(indent=2) {
 		let graph = {
-			nodes: Object.keys(this.nodes).map((name) => {
-				const win = this.nodes[name]
+			windows: Object.keys(this.windows).map((name) => {
+				const win = this.windows[name]
 				return { name, x: win.x, y: win.y }
 			}),
 			connections: []
@@ -226,7 +226,7 @@ class LocalStorageGraphWalker extends GraphWalker {
 		}
 
 		// Normalise window entries: support both legacy strings and { name, x, y } objects
-		const windowEntries = (Array.isArray(graph.nodes) ? graph.nodes : []).map((entry) =>
+		const windowEntries = (Array.isArray(graph.windows) ? graph.windows : []).map((entry) =>
 			typeof entry === 'string' ? { name: entry } : entry
 		)
 		const windowMap = new Map(windowEntries.map((e) => [e.name, e]))
@@ -245,7 +245,7 @@ class LocalStorageGraphWalker extends GraphWalker {
 		}
 
 		windowMap.forEach((entry) => {
-			if(entry.name == undefined || this.nodes[entry.name] != undefined) {
+			if(entry.name == undefined || this.windows[entry.name] != undefined) {
 				return
 			}
 
@@ -295,7 +295,7 @@ class LocalStorageGraphWalker extends GraphWalker {
 	}
 
 	/* Reads saved window positions from localStorage and moves any already-open
-	   nodes to their stored x/y. If the key does not exist, does nothing. */
+	   windows to their stored x/y. If the key does not exist, does nothing. */
 	restorePositions(storageKey='pipe-view-graph') {
 		const json = localStorage.getItem(storageKey)
 		if(json == null) {
@@ -310,12 +310,12 @@ class LocalStorageGraphWalker extends GraphWalker {
 			return
 		}
 
-		const entries = Array.isArray(graph?.nodes) ? graph.nodes : []
+		const entries = Array.isArray(graph?.windows) ? graph.windows : []
 		for(const entry of entries) {
 			if(typeof entry !== 'object' || entry.x == undefined || entry.y == undefined) {
 				continue
 			}
-			const win = this.nodes[entry.name]
+			const win = this.windows[entry.name]
 			if(win != undefined) {
 				win.move(entry.x, entry.y)
 			}

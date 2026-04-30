@@ -1,4 +1,8 @@
 
+const reactive = PetiteVue.reactive
+
+
+
 const dispatchRequestDrawEvent = function(data={}){
     document.dispatchEvent(new CustomEvent('requestdraw', {
         detail: data

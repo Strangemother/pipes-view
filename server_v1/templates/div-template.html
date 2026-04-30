@@ -1,0 +1,48 @@
+{% raw %}
+<div class="display-panel" tabindex="0" @focusin="panelFocus(event, box)" :id="'node_' + box.name">
+
+    <div class="content">
+        <div class="inbound pips">
+            <ul>
+                <li class="pip" v-for="pip in box.pipsInbound">
+                    <div class="draggable-pip dragsolo-bubble"
+                        draggable=true
+                        @dragstart='pipStartDrag(event, "inbound", pip)'
+                        @dragend='pipEndDrag(event, "inbound", pip)'
+                        @dragover='pipOverDrag(event, "inbound", pip)'
+                        @drop='pipDrop(event, "inbound", pip)'
+                        :id="box.name + '-inbound-'+pip.index"
+                        >
+                        {{ pip.index }}
+                    </div>
+                </li>
+            </ul>
+        </div>
+
+        <div class="content-value">
+
+            <div class="display-number">
+                    {{ box.name }}
+            </div>
+        </div>
+
+        <div class="outbound pips">
+            <ul>
+                <li class="pip"
+                    v-for="pip in box.pipsOutbound">
+                    <div class="draggable-pip dragsolo-bubble"
+                        draggable=true
+                        @dragstart='pipStartDrag(event, "outbound", pip)'
+                        @dragend='pipEndDrag(event, "outbound", pip)'
+                        @dragover='pipOverDrag(event, "outbound", pip)'
+                        @drop='pipDrop(event, "outbound", pip)'
+                        :id="box.name + '-outbound-'+pip.index"
+                        >
+                        {{ pip.index }}
+                    </div>
+                </li>
+            </ul>
+        </div>
+    </div>
+</div>
+{% endraw %}
