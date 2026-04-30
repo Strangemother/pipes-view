@@ -193,12 +193,12 @@ const runPipes = function(conf) {
     // Drag and zoom functionality.
 
     const infiniteDrag = new ZoomableInfiniteDrag(
-            conf.dragspaceSelector || 'main',
-            '.box'
+                conf.dragspaceSelector || 'main',
+                '.box'
             )
 
     /* Convenience tool. */
-    const pipesTool = new PipesTool();
+    const pipesTool = new PipesTool(conf);
     window.pipesTool = pipesTool
 
 }

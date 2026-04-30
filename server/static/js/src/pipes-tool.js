@@ -15,7 +15,6 @@ class PipesTool {
     //  user tool to access all the bits easily.
     filename = 'pipes-tool-graph'
     constructor(conf={}) {
-
         let T = {}
         try{
             T = new WorkTasks

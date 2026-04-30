@@ -264,6 +264,7 @@ class CanvasLayerGroup {
 class CanvasLayer {
     /* Manages lines on a canvas. */
     // const cl1 = new CanvasLayer('.canvas-container.back')
+    groupRender = true
     constructor(selector) {
         this.selector = selector
         let _canvas = document.querySelector(selector)
@@ -307,7 +308,6 @@ class CanvasLayer {
         this.lines[tidyLine._id] = tidyLine
     }
 
-    groupRender = true
     renderFrame(delta){
         const ctx = this.ctx
         const frameStart = PERF_DEBUG ? performance.now() : 0
@@ -391,7 +391,9 @@ class CanvasLayer {
             let line = lines[i]
             let design = this.getLineDesign(line)
             let color = this.getLineColor(line)
-            let key = `${design}::${color}`
+            let width = line.obj.width
+            
+            let key = `${design}::${color}::${width}`
 
             if(groups[key] == undefined) {
                 groups[key] = {

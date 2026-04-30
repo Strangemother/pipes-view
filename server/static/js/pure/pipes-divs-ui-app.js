@@ -46,6 +46,7 @@ const createUIApp = function(mountSelector='#mini_app') {
         , clearButton() {
             // clear the view
             pipesTool.clear()
+            nodesApp.clearBoxes()
         }
 
         , onFocusNode(event) {
@@ -262,6 +263,10 @@ const createNodesApp = function(mountSelector='#panspace_container') {
             let v = item(1, 1);
             this.boxes.push(v)
             return v
+        }
+
+        , clearBoxes(){
+            this.boxes =[]
         }
 
         , panelFocus(e, item){
