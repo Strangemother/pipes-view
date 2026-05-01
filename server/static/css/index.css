@@ -261,3 +261,7 @@ html.layer-space-container {
 .pipes-only .box.node-cycle {
     background: #060606;
 }
+
+.box.executing {
+    color: red;
+}

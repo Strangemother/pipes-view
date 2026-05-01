@@ -42,8 +42,8 @@ class GraphExecutor extends LocalStorageGraphWalker {
         // if(options.resetState ?? true) {
             // this.clearExecutionState()
         // }
-
-        node.classList.add('executing')
+        let flashUnit = this.getGraphExecutorHighlightElement(nodeName, node)
+        flashUnit.classList.add('executing')
 
         let result = this.runTaskFunc(nodeName, node, data, options)
         return result;
@@ -69,15 +69,26 @@ class GraphExecutor extends LocalStorageGraphWalker {
         //  given args
         //  options
         //
-        let unit = this.getNode(nodeName)
-        let result = taskFunc({nodeName, element: node, node: unit}, data, options)
+        let flashUnit = this.getGraphExecutorHighlightElement(nodeName, node)
+        let info = {nodeName, element: node, node}
+        let result = taskFunc(info, data, options)
         setTimeout(()=>{
-            node.classList.remove('executing')
+            flashUnit.classList.remove('executing')
         }, lightTimeout)
         return result
         // } catch (err) {
         //     console.error(`Error executing task ${node} for node ${nodeName}:`, err)
         // }
+    }
+
+    getGraphExecutorHighlightElement(nodeName, node) {
+        if(this.parent.getGraphExecutorHighlightElement){
+            let r= this.parent.getGraphExecutorHighlightElement(nodeName, node)
+            if (r != undefined) {
+                return r
+            }
+        }
+        return node;
     }
 
     getDefaultTask(nodeName, node, data, options) {

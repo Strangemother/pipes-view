@@ -100,6 +100,10 @@ class MyPipes extends PipesTool {
         return document.querySelector(name)
     }
 
+    getGraphExecutorHighlightElement(nodeName, node, unit){
+        return this.getGraphHighlighterElement(nodeName)
+    }
+
     getGraphHighlighterElement(name){
         return this.getDOMElement(name).parentNode;
     }
