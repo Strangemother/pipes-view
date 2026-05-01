@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="en" class="layer-space-container">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="https://cdn.jsdelivr.net/npm/polyclass@latest/dist/polyclass.browser-full.js"></script>
+    <link rel="stylesheet" href="../static/css/index.css">
+    <link rel="stylesheet" href="../static/css/pure.css">
+     {# <link rel="stylesheet" href="../static/css/winbox.min.css"> #}
+    <title>Cluster</title>
+</head>
+
+<body polyclass class='background-#222
+                        color-#DDD
+                        margin-0
+                        layer-space-container
+                        font-pack-lexend+deca-500
+                        font-lexend+deca-500 letter-spacing-.1px'>
+
+    <header class='primary background-#111'>
+        <div class="logo padding-1em
+                    font-size-1rem">Strangemother</div>
+    </header>
+
+    <div class="layer-space">
+
+        <main>
+            <header>
+                <h1 class="title text-align-center font-size-2rem">Pipes</h1>
+            </header>
+
+            <div class="page-content">
+                <p>Manual Pipes. No libraries, pure setup.</p>
+                <a href="javascript: addConnecton();">Add Connection</a>
+            </div>
+
+            <div class="page-content pipes-only">
+
+                <div class="panspace-container box-area-a">
+                    <div class="plain box margin-bottom-4em">
+                        <div class="number" id='box_pound'>£</div>
+                    </div>
+
+                    <div class="plain box margin-top-4em">
+                        <div class="number" id="box_amp">&amp;</div>
+                    </div>
+
+                </div>
+
+                <div class="panspace-container box-area-b">
+                    <div class="plain box margin-bottom-4em">
+                        <div class="number" id='box_percent'>%</div>
+                    </div>
+
+                    <div class="plain box margin-top-4em">
+                        <div class="number" id="box_dollar">$</div>
+                    </div>
+
+                </div>
+                <div class="overlay">
+                    <canvas></canvas>
+                </div>
+
+            </div>
+
+    </div>
+
+    <script src="../static/js/vendor/petite-vue.iife.js"></script>
+
+    <script src="../static/js/src/canvas-layer.js"></script>
+    <script src="../static/js/src/pens/straight-lines.js"></script>
+    <script src="../static/js/src/pens/curve-lines.js"></script>
+    <script src="../static/js/src/pens/s-curve-lines.js"></script>
+
+    <script src="../static/js/src/pure/graph-walker-simplified.js"></script>
+    <script src="../static/js/src/pure/graph-highlighter.js"></script>
+    <script src="../static/js/src/pure/graph-executor-simplified.js"></script>
+
+    <script src="../static/js/src/pipe-events.js"></script>
+    <script src="../static/js/src/pipes-tool.js"></script>
+
+    <script src="../static/js/index-pipes-only.js"></script>
+
+
+</body>
+</html>
+
+

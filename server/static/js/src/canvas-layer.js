@@ -23,14 +23,19 @@ const perfLog = PERF_DEBUG ? console.log.bind(console) : ()=>{}
 class CanvasLayerGroup {
     // const clItems = new CanvasLayerGroup(cl1, cl2)
     targetFPS = 50
-    constructor(...layers) {
-        this.layers = layers
+    constructor(back, fore, conf) {
+        this.layers = [back, fore]
+        this.conf = conf
         document.addEventListener('connectnodes', this.connectNodesEvent.bind(this))
     }
 
     connectNodesEvent(event) {
         let obj = event.detail
         return this.connectNodes(obj)
+    }
+
+    getTip(label, direction, pipIndex) {
+        return this.conf.parent.getTip(label, direction, pipIndex)
     }
 
     connectNodes(obj) {
@@ -55,8 +60,8 @@ class CanvasLayerGroup {
             return
         }
 
-        let senderUnit = app.getTip(obj.sender.label, obj.sender.direction, obj.sender.pipIndex)
-        let receiverUnit = app.getTip(obj.receiver.label, obj.receiver.direction, obj.receiver.pipIndex)
+        let senderUnit = this.getTip(obj.sender.label, obj.sender.direction, obj.sender.pipIndex)
+        let receiverUnit = this.getTip(obj.receiver.label, obj.receiver.direction, obj.receiver.pipIndex)
 
         let _id = `${obj.sender.label}-${obj.sender.pipIndex}-${obj.receiver.label}-${obj.receiver.pipIndex}`
 
@@ -161,7 +166,7 @@ class CanvasLayerGroup {
 
     renderFrame(delta){
         this.layers.forEach((layer)=>{
-            layer.draw(delta)
+            layer && layer.draw(delta)
         })
     }
 
@@ -210,8 +215,8 @@ class CanvasLayerGroup {
                 receiverDirection = 'inbound'
             }
 
-            let senderNode = senderUnit.node
-            let receiverNode = receiverUnit.node
+            let senderNode = senderUnit?.node || senderUnit
+            let receiverNode = receiverUnit?.node || receiverUnit
 
             let a = getCenter(senderNode)
             let b = getCenter(receiverNode)
@@ -231,8 +236,9 @@ class CanvasLayerGroup {
 
     drawLine(_id, a, b, directions={}) {
         perfLog('From', a, 'to', b)
+        let layer = this.layers[1];
 
-        let tidyLine = this.layers[1].lines[_id]
+        let tidyLine = layer.lines[_id]
         if(tidyLine == undefined) {
             tidyLine = {
                 _id,
@@ -245,7 +251,7 @@ class CanvasLayerGroup {
                 obj: directions.obj
             }
             perfLog('Installing line.')
-            this.layers[1].addLine(tidyLine)
+            layer.addLine(tidyLine)
             return
         }
 
@@ -385,13 +391,18 @@ class CanvasLayer {
         return line?.lineColor ?? line?.color ?? 'purple'
     }
 
+    getLineWidth(line){
+        return line?.lineWidth ?? line?.width ?? line?.obj?.width ?? 10
+
+    }
+
     groupLinesByDesignAndColor(lines) {
         let groups = {}
         for(let i = 0; i < lines.length; i++) {
             let line = lines[i]
             let design = this.getLineDesign(line)
             let color = this.getLineColor(line)
-            let width = line.obj.width
+            let width = this.getLineWidth(line) // line.obj.width
 
             let key = `${design}::${color}::${width}`
 

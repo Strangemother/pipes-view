@@ -12,7 +12,7 @@ The data attached to the node is the exection code.
  */
 class GraphWalker {
 	constructor(conf={}) {
-		this.connections = conf.connections//|| pipeData.connections
+		this.connections = conf.connections || pipeData.connections
 		this.conf = conf
 		// this.nodes = conf.nodes || app.windowMap
 	}
@@ -22,31 +22,45 @@ class GraphWalker {
 	}
 
 	get nodes() {
-		return this.conf.nodes || app.windowMap
+		return this.conf.nodes
 	}
 
-	getConnections(name) {
-		if(name == undefined) {
-			return []
-		}
 
-		let res = []
-		for(let connectionId in this.connections) {
-			let connection = this.connections[connectionId]
-			if(connection == undefined || connection.obj == undefined) {
-				continue
-			}
+    getConnections(name) {
+        if(name == undefined) {
+            return []
+        }
 
-			let senderLabel = connection.obj.sender?.label
-			let receiverLabel = connection.obj.receiver?.label
+        let res = []
+        for(let connectionId in this.connections) {
+            let connection = this.connections[connectionId]
+            if(connection == undefined){
+                continue
+            }
 
-			if(senderLabel == name || receiverLabel == name) {
-				res.push(connection)
-			}
-		}
+            if(connection.obj != undefined) {
 
-		return res
-	}
+                let senderLabel = connection.obj.sender?.label
+                let receiverLabel = connection.obj.receiver?.label
+
+                if(senderLabel == name || receiverLabel == name) {
+                    res.push(connection)
+                }
+            } else {
+                if(Array.isArray(connection)) {
+                    let senderLabel = connection[0]
+                    let receiverLabel = connection[1]
+
+                    if(senderLabel == name || receiverLabel == name) {
+                        res.push(connection)
+                    }
+                }
+            }
+
+        }
+
+        return res
+    }
 
 	getIncomingIds(name) {
 		return this.getDirection(name, false)
@@ -57,6 +71,19 @@ class GraphWalker {
 	}
 
 	getDirection(name, outbound=true) {
+		if(Array.isArray(this.connections)) {
+			return this.getDirectionFromArray(name, outbound)
+		}else {
+			return this.getDirectionFromDict(name, outbound)
+		}
+	}
+
+	getDirectionFromArray(name, outbound=true) {
+		debugger
+	}
+
+
+	getDirectionFromDict(name, outbound=true) {
 		if(name == undefined) {
 			return []
 		}
@@ -64,24 +91,57 @@ class GraphWalker {
 		let res = []
 		for(let connectionId in this.connections) {
 			let connection = this.connections[connectionId]
-			if(connection == undefined || connection.obj == undefined) {
-				continue
-			}
 
-			let sender = connection.obj?.sender
-			let receiver = connection.obj?.receiver
+			if(Array.isArray(connection)) {
+				if(outbound) {
+					if(name == connection[0]) {
+				    	res.push(connection[1])
+					}
+				} else {
+					if(name == connection[1]) {
+				    	res.push(connection[0])
+					}
+				}
+			} else{
 
-			let outboundLabel = sender?.label
-			let inboundLabel = receiver?.label
-			if(sender?.direction == 'inbound' && receiver?.direction == 'outbound') {
-				outboundLabel = receiver?.label
-				inboundLabel = sender?.label
-			}
+				if(connection == undefined) {
+					continue
+				}
 
-			let sourceLabel = outbound ? outboundLabel : inboundLabel
-			let targetLabel = outbound ? inboundLabel : outboundLabel
-			if(sourceLabel == name && targetLabel != undefined) {
-				res.push(targetLabel)
+				if(connection.obj == undefined) {
+					let sender = connection.sender
+					let receiver = connection.receiver
+
+					let outboundLabel = sender.label
+					let inboundLabel = receiver.label
+
+					if(sender.direction == 'inbound' && receiver.direction == 'outbound') {
+						outboundLabel = receiver.label
+						inboundLabel = sender.label
+					}
+
+					let sourceLabel = outbound ? outboundLabel : inboundLabel
+					let targetLabel = outbound ? inboundLabel : outboundLabel
+					if(sourceLabel == name && targetLabel != undefined) {
+						res.push(targetLabel)
+					}
+				} else {
+					let sender = connection.obj?.sender
+					let receiver = connection.obj?.receiver
+
+					let outboundLabel = sender?.label
+					let inboundLabel = receiver?.label
+					if(sender?.direction == 'inbound' && receiver?.direction == 'outbound') {
+						outboundLabel = receiver?.label
+						inboundLabel = sender?.label
+					}
+
+					let sourceLabel = outbound ? outboundLabel : inboundLabel
+					let targetLabel = outbound ? inboundLabel : outboundLabel
+					if(sourceLabel == name && targetLabel != undefined) {
+						res.push(targetLabel)
+					}
+				}
 			}
 		}
 
@@ -101,9 +161,9 @@ class GraphWalker {
 		}
 
 		const lineConfig = Object.assign(line, {
-			// color: line?.color,
-			design: line?.design ?? line?.style ?? line?.lineDesign
-		})
+					// color: line?.color,
+					design: line?.design ?? line?.style ?? line?.lineDesign
+				})
 
 		const connection = {
 			sender: {
@@ -126,6 +186,9 @@ class GraphWalker {
 		return connection
 	}
 
+	addConnecton(name, obj) {
+		this.connections[name] = obj
+	}
 	clearConnections() {
 		for(let connectionId in this.connections) {
 			delete this.connections[connectionId]
@@ -149,23 +212,27 @@ class GraphWalker {
 
         const win = this.nodes[name]
 
-
         if(win == null && this.conf.app.getGraphNodeElement) {
         	return this.conf.app.getGraphNodeElement(name)
         }
 
-        return run
+        return this.getDOMElement(name)
+    }
 
+
+    getDOMElement(name) {
+        let res = this.parent.getDOMElement(name)
+        if(!res) {
+        	console.warn('No window element for', name)
+        }
+        return res;
     }
 
     getNode(name) {
         // return the app within the node.
-        const win = this.getWindow(name)
-        if(win == null) {
-            return null
-        }
-        debugger;
-        return win.vueApp || null
+        // const win = this.getWindow(name)
+		return this.nodes[name]
+        // return win
     }
 }
 

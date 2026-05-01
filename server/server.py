@@ -13,13 +13,13 @@ def main():
 def hello_world():
     return render_template('index.html')
 
-@app.route("/winbox/")
-def winbox_view():
-    return render_template('index-winbox.html')
-
 @app.route("/drag-pan-zoom/")
 def drag_pan_zoom():
     return render_template('index-dragsolo-infinitedrag.html')
+
+@app.route("/pipes-only/")
+def pipes_only():
+    return render_template('index-pipes-only.html')
 
 
 if __name__ == '__main__':

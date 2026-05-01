@@ -26,13 +26,21 @@ class GraphHighlighter {
         this._cycleStart = null
         this._cycleStarted = false
         this._runTimer = null
+        this.parent = conf.parent
     }
 
     _getWin(name) {
         if(this.app.getGraphNodeElement) {
             return this.app.getGraphNodeElement(name)
         }
-        return this.app.windowMap[name]
+
+
+        if(this.parent.getGraphHighlighterElement) {
+            return this.parent.getGraphHighlighterElement(name)
+        }
+
+        return this.parent.getDOMElement(name);
+        // return this.app.windowMap[name]
     }
 
     /* Adds the highlight class to the named node's window. */

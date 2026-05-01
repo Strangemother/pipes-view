@@ -20,11 +20,12 @@ class PipesTool {
 
     setup(conf) {
         this.conf = conf;
-        this.app = conf.app || app
+        this.app = conf.app
         this.walker = conf.walker || new GraphExecutor(
-                Object.assign({}, conf, { app: this.app })
+                Object.assign({}, conf, { app: this.app, parent: this })
             )
-        this.lights = conf.lights || new GraphHighlighter({ app: this.app, walker: this.walker })
+
+        this.lights = conf.lights || new GraphHighlighter({ app: this.app, parent:this, walker: this.walker })
 
     }
 

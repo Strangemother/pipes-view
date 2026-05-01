@@ -235,3 +235,29 @@ html.layer-space-container {
     max-width: 1000px;
     margin: auto;
 }
+
+.page-content.pipes-only {
+    /* border: solid; */
+    display: grid;
+    /* grid-template-rows: 1fr; */
+    /* grid-template-columns: 1fr; */
+}
+
+.pipes-only .overlay {
+    grid-area: 1/1/3/1;
+    /* outline: solid 1px red; */
+}
+
+.pipes-only .panspace-container {
+    grid-area: 2/1/2/1;
+}
+
+.panspace-container.box-area-a {
+    grid-area: 1/1/1/1;
+}
+
+.pipes-only .overlay canvas {outline: dashed 1px #777;width: 100%;height: 100%;}
+
+.pipes-only .box.node-cycle {
+    background: #060606;
+}
