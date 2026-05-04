@@ -258,12 +258,15 @@ class Stepper {
         let entry = this.graph.getNode(nodeName)
         let handler = entry
         let mergeNode = false
+        let inputMode = 'value'
 
         if(typeof entry == 'function') {
             mergeNode = entry.mergeNode === true
+            inputMode = entry.inputMode || (entry.expectsPromise === true ? 'promise' : 'value')
         } else if(entry != null && typeof entry == 'object') {
             handler = entry.handler || entry.run || entry.execute || entry.fn || entry.func || entry.value
             mergeNode = entry.mergeNode === true
+            inputMode = entry.inputMode || (entry.expectsPromise === true ? 'promise' : 'value')
         }
 
         if(typeof handler != 'function') {
@@ -274,8 +277,17 @@ class Stepper {
             name: nodeName,
             handler: handler,
             mergeNode: mergeNode,
+            inputMode: inputMode,
             entry: entry,
         }
+    }
+
+    getHandlerArgument(node, input) {
+        if(node.inputMode == 'promise') {
+            return input.promise
+        }
+
+        return Promise.resolve(input.promise)
     }
 
     createTrackedValue(value) {
@@ -358,7 +370,8 @@ class Stepper {
         /* Execute */
         let execution = this.trackPromise(
             Promise.resolve()
-                .then(() => node.handler.call(this, executeInput.promise))
+                .then(() => this.getHandlerArgument(node, executeInput))
+                .then((handlerInput) => node.handler.call(this, handlerInput))
                 .then(
                     (value) => {
                         let nextValue = this.onNodeComplete(nodeName, node, nextNodes, executeInput, value)

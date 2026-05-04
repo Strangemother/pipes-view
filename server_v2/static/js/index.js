@@ -85,16 +85,14 @@ const getDemoDelay = function() {
 }
 
 const withDemoDelay = function(nodeName, resolver) {
-    return function(valuePromise) {
-        return Promise.resolve(valuePromise).then((value) => {
-            console.log(nodeName, value)
-            return new Promise((resolve) => {
-                let delay = getDemoDelay()
-                console.log(`${nodeName} delay`, delay)
-                setTimeout(() => {
-                    resolve(resolver(value))
-                }, delay)
-            })
+    return function(value) {
+        console.log(nodeName, value)
+        return new Promise((resolve) => {
+            let delay = getDemoDelay()
+            console.log(`${nodeName} delay`, delay)
+            setTimeout(() => {
+                resolve(resolver(value))
+            }, delay)
         })
     }
 }
