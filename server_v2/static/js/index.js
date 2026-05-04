@@ -11,16 +11,24 @@ const myData = {
         ['a', 'b']
         , ['b', 'c']
         , ['b', 'd']
+        , ['b', 'f']
+        , ['b', 'g']
         , ['c', 'e']
         , ['d', 'e']
+        , ['f', 'h']
+        , ['g', 'h']
     ]
 
     , connectionsDicts: [
         { sender: 'a', receiver: 'b', width: 3}
         , { sender: 'b', receiver: 'c' }
         , { sender: 'b', receiver: 'd' }
+        , { sender: 'b', receiver: 'f' }
+        , { sender: 'b', receiver: 'g' }
         , { sender: 'c', receiver: 'e' }
         , { sender: 'd', receiver: 'e' }
+        , { sender: 'f', receiver: 'h' }
+        , { sender: 'g', receiver: 'h' }
     ]
 
     , connectionsDictDict: {
@@ -28,7 +36,7 @@ const myData = {
             to: ['b']
         }
         , b: {
-            to: ['c', 'd']
+            to: ['c', 'd', 'f', 'g']
             , from: ['a']
         }
         , c: {
@@ -44,6 +52,20 @@ const myData = {
 
         , e: {
             from: ['c', 'd']
+        }
+
+        , f: {
+            to: ['h']
+            , from: ['b']
+        }
+
+        , g: {
+            to: ['h']
+            , from: ['b']
+        }
+
+        , h: {
+            from: ['f', 'g']
         }
     }
 
@@ -64,11 +86,26 @@ const myData = {
                         console.log('d', ints); 
                         return (Array.isArray(ints) ? ints.reduce((a,b)=>a+b) : ints) + 3; 
                     })
+                , f: (valuePromise)=> Promise.resolve(valuePromise).then((ints) => {
+                        console.log('f', ints);
+                        return (Array.isArray(ints) ? ints.reduce((a,b)=>a+b) : ints) + 5;
+                    })
+                , g: (valuePromise)=> Promise.resolve(valuePromise).then((ints) => {
+                        console.log('g', ints);
+                        return (Array.isArray(ints) ? ints.reduce((a,b)=>a+b) : ints) + 6;
+                    })
                 , e: {
                     mergeNode: true,
                     handler: (valuePromise)=> Promise.resolve(valuePromise).then((ints) => {
                         console.log('e', ints);
                         return ints.reduce((a, b) => a + b, 0) + 4;
+                        })
+                    }
+                , h: {
+                    mergeNode: true,
+                    handler: (valuePromise)=> Promise.resolve(valuePromise).then((ints) => {
+                        console.log('h', ints);
+                        return ints.reduce((a, b) => a + b, 0) + 8;
                         })
                     }
         }
