@@ -33,10 +33,52 @@
 
             <div class="page-content">
                 <p>Description.</p>
+                <p>Each card below has a <code>data-graph-node</code> attribute so the demo stepper can toggle classes during execution.</p>
             </div>
 
             <div class="page-content">
+                <section class="graph-demo widthed">
+                    <div class="graph-demo-controls">
+                        <button type="button" onclick="window.demoStepper = gg.stepper('a'); window.demoStepper.start(1, 2)">Prepare Stepper</button>
+                        <button type="button" onclick="window.demoStepper && window.demoStepper.step()">Step</button>
+                        <button type="button" onclick="console.log(window.demoStepper?.events, window.demoStepper?.stash)">Log State</button>
+                    </div>
 
+                    <div class="graph-demo-grid">
+                        <div class="graph-demo-node" data-graph-node="a">
+                            <div class="graph-demo-node-name">a</div>
+                            <div class="graph-demo-node-note">start</div>
+                        </div>
+                        <div class="graph-demo-node" data-graph-node="b">
+                            <div class="graph-demo-node-name">b</div>
+                            <div class="graph-demo-node-note">fan out</div>
+                        </div>
+                        <div class="graph-demo-node" data-graph-node="c">
+                            <div class="graph-demo-node-name">c</div>
+                            <div class="graph-demo-node-note">to e</div>
+                        </div>
+                        <div class="graph-demo-node" data-graph-node="d">
+                            <div class="graph-demo-node-name">d</div>
+                            <div class="graph-demo-node-note">to e</div>
+                        </div>
+                        <div class="graph-demo-node" data-graph-node="e">
+                            <div class="graph-demo-node-name">e</div>
+                            <div class="graph-demo-node-note">mergeNode</div>
+                        </div>
+                        <div class="graph-demo-node" data-graph-node="f">
+                            <div class="graph-demo-node-name">f</div>
+                            <div class="graph-demo-node-note">to h</div>
+                        </div>
+                        <div class="graph-demo-node" data-graph-node="g">
+                            <div class="graph-demo-node-name">g</div>
+                            <div class="graph-demo-node-note">to h</div>
+                        </div>
+                        <div class="graph-demo-node" data-graph-node="h">
+                            <div class="graph-demo-node-name">h</div>
+                            <div class="graph-demo-node-note">mergeNode</div>
+                        </div>
+                    </div>
+                </section>
             </div>
 
         </main>

@@ -6,6 +6,56 @@ In this new verson
 
 */
 
+class DemoStepper extends Stepper {
+    constructor(graph) {
+        super(graph)
+        this.events = []
+    }
+
+    getNodeElement(nodeName) {
+        if(typeof document == 'undefined') {
+            return null
+        }
+
+        return document.querySelector(`[data-graph-node="${nodeName}"]`)
+    }
+
+    setNodeState(nodeName, nextState) {
+        let element = this.getNodeElement(nodeName)
+        if(element == null) {
+            return
+        }
+
+        element.classList.remove('graph-node-execute', 'graph-node-complete')
+        if(nextState != undefined) {
+            element.classList.add(nextState)
+        }
+    }
+
+    onNodeExecute(nodeName, node, nextNodes, input) {
+        this.events.push({ type: 'execute', nodeName: nodeName, nextNodes: Object.keys(nextNodes) })
+        this.setNodeState(nodeName, 'graph-node-execute')
+        return input
+    }
+
+    onNodeComplete(nodeName, node, nextNodes, input, value) {
+        this.events.push({ type: 'complete', nodeName: nodeName, value: value })
+        this.setNodeState(nodeName, 'graph-node-complete')
+        return value
+    }
+
+    onStash(nodeName, value, stash) {
+        this.events.push({ type: 'stash', nodeName: nodeName, value: value })
+        return value
+    }
+}
+
+class DemoGraph extends Graph {
+    getStepperClass() {
+        return DemoStepper
+    }
+}
+
 const myData = {
     connectionsList: [
         ['a', 'b']
@@ -114,7 +164,7 @@ const myData = {
 }
 
 
-gg = new Graph(myData)
+gg = new DemoGraph(myData)
 // const aNode = gg.getNode('a')
 // if(aNode.n != 'a') {
 //     console.error('bad a node:', aNode)

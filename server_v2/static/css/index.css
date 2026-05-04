@@ -235,3 +235,69 @@ html.layer-space-container {
     max-width: 1000px;
     margin: auto;
 }
+
+.graph-demo {
+    display: grid;
+    gap: 1.25rem;
+    padding: 1rem 0 2rem;
+}
+
+.graph-demo-controls {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+}
+
+.graph-demo-controls button {
+    background: #1d1d1d;
+    color: #f3f0e8;
+    border: solid 1px #4b4b4b;
+    border-radius: 999px;
+    padding: 0.7rem 1rem;
+    font: inherit;
+    cursor: pointer;
+}
+
+.graph-demo-controls button:hover {
+    border-color: #d2b15e;
+}
+
+.graph-demo-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+    gap: 1rem;
+}
+
+.graph-demo-node {
+    min-height: 110px;
+    border: solid 1px #363636;
+    border-radius: 1rem;
+    background: linear-gradient(180deg, #171717 0%, #101010 100%);
+    box-shadow: inset 0 1px 0 rgba(255,255,255,0.04);
+    padding: 1rem;
+    transition: border-color 160ms ease, transform 160ms ease, box-shadow 160ms ease, background 160ms ease;
+}
+
+.graph-demo-node-name {
+    font-size: 1.4rem;
+    font-weight: 600;
+    text-transform: uppercase;
+}
+
+.graph-demo-node-note {
+    color: #9f9f9f;
+    margin-top: 0.35rem;
+    font-size: 0.92rem;
+}
+
+.graph-demo-node.graph-node-execute {
+    border-color: #f0b429;
+    box-shadow: 0 0 0 1px rgba(240, 180, 41, 0.25), 0 0 24px rgba(240, 180, 41, 0.18);
+    transform: translateY(-2px);
+}
+
+.graph-demo-node.graph-node-complete {
+    border-color: #2fc27e;
+    background: linear-gradient(180deg, #13251d 0%, #0f1713 100%);
+    box-shadow: 0 0 0 1px rgba(47, 194, 126, 0.22), 0 0 22px rgba(47, 194, 126, 0.15);
+}

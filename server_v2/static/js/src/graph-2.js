@@ -14,8 +14,13 @@ class Graph {
         this.data = data
     }
 
-    stepper(origin) {
-        let s = new Stepper(this)
+    getStepperClass() {
+        return Stepper
+    }
+
+    stepper(origin, StepperClass) {
+        StepperClass = StepperClass || this.getStepperClass()
+        let s = new StepperClass(this)
         if(origin) {
             s.setOrigin(origin)
         }

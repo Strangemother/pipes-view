@@ -25,6 +25,30 @@ class Stepper {
         this.origin = start
     }
 
+    onStart(rows, args) {
+        return rows
+    }
+
+    onStep(rows) {
+        return rows
+    }
+
+    onNodeExecute(nodeName, node, nextNodes, input) {
+        return input
+    }
+
+    onNodeComplete(nodeName, node, nextNodes, input, value) {
+        return value
+    }
+
+    onNodeError(nodeName, node, nextNodes, input, error) {
+        return error
+    }
+
+    onStash(nodeName, value, stash) {
+        return value
+    }
+
     start() {
         if(this.origin == undefined) {
             return []
@@ -40,7 +64,8 @@ class Stepper {
         this._current = this.origin
         this._started = true
 
-        return this.rows
+        let startRows = this.onStart(this.rows, Array.from(arguments))
+        return startRows == undefined ? this.rows : startRows
     }
 
     step() {
@@ -81,7 +106,8 @@ class Stepper {
         this._nextNodes = nextRows.map((row) => row.nodeName)
         this._current = this._nextNodes[0]
 
-        return nextRows
+        let steppedRows = this.onStep(nextRows)
+        return steppedRows == undefined ? nextRows : steppedRows
     }
 
     mergeRows(rows) {
@@ -208,7 +234,8 @@ class Stepper {
                     this.stash[nodeName] = items
                 }
 
-                items.push(value)
+                let stashedValue = this.onStash(nodeName, value, this.stash)
+                items.push(stashedValue == undefined ? value : stashedValue)
                 return value
             },
             (error) => {
@@ -219,25 +246,32 @@ class Stepper {
 
     runTarget(nodeName, node, nextNodes, input) {
         this._current = nodeName
+        let executeInput = this.onNodeExecute(nodeName, node, nextNodes, input)
+        executeInput = executeInput == undefined ? input : executeInput
         console.log(
             'Run Node:', node.handler,
-            '\nWith Promise:', input?.promise || input,
+            '\nWith Promise:', executeInput?.promise || executeInput,
             '\nThen Next:', nextNodes,
             )
 
         /* Execute */
         let execution = this.trackPromise(
-            Promise.resolve().then(() => node.handler.call(this, input.promise))
-        )
-
-        execution.promise.then(
-            (value) => {
-                console.log('Result:', value)
-                return value
-            },
-            (error) => {
-                console.error('Result Error:', error)
-            }
+            Promise.resolve()
+                .then(() => node.handler.call(this, executeInput.promise))
+                .then(
+                    (value) => {
+                        let nextValue = this.onNodeComplete(nodeName, node, nextNodes, executeInput, value)
+                        value = nextValue == undefined ? value : nextValue
+                        console.log('Result:', value)
+                        return value
+                    },
+                    (error) => {
+                        let nextError = this.onNodeError(nodeName, node, nextNodes, executeInput, error)
+                        error = nextError == undefined ? error : nextError
+                        console.error('Result Error:', error)
+                        throw error
+                    }
+                )
         )
 
         return execution
