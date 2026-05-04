@@ -1,0 +1,68 @@
+
+
+.admin-bar {
+    display: flex;
+    background: #111;
+    /* padding: 0.6em; */
+    /* gap: 1em; */
+}
+
+.admin-bar a {
+    color: inherit;
+}
+
+.admin-bar .spacer {
+    flex-grow: 1;
+}
+
+
+
+.admin-bar .group {
+    display: flex;
+    border: solid 2px #242424;
+    gap: 1em;
+    align-items: center;
+    padding: 0.7em 0.8em 0.8em;
+    border-radius: 0.4em;
+    border-top: none;
+    border-bottom: none;
+    border-radius: 0;
+}
+
+.admin-bar .group > label {
+    flex-wrap: nowrap;
+    flex-direction: row;
+    gap: .4em;
+}
+
+.admin-bar .group a {
+    text-decoration: none;
+    padding: 0.4em 1em;
+    background: #080808;
+    border-radius: 0.3em;
+    color: #aaa;
+    font-size: 0.9em;
+}
+
+.admin-bar .group .label {
+    color: #999;
+    padding: 0 0em;
+}
+
+.admin-bar .group + .group {
+    border-left: none;
+}
+
+.admin-bar .inline-input {
+    gap: 0;
+    display: flex;
+}
+
+.admin-bar .inline-input input {
+    border-radius: .4em 0em 0em .4em;
+    padding-left: 0.6em;
+}
+
+.admin-bar .inline-input a {
+    border-radius: 0em  .4em .4em 0em;
+}

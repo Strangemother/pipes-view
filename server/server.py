@@ -21,6 +21,10 @@ def drag_pan_zoom():
 def pipes_only():
     return render_template('index-pipes-only.html')
 
+@app.route("/pipes-only-2/")
+def pipes_only_2():
+    return render_template('index-pipes-only-many.html')
+
 
 if __name__ == '__main__':
     main()

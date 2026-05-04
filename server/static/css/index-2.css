@@ -1,0 +1,32 @@
+.overlay {
+    overflow-wrap: anywhere;
+}
+
+div#page_content {
+    /* overflow: auto; */
+}
+
+.panspace-container.box-area-a {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 2em;
+    }
+
+.panspace-container.box-area-a .plain.box {
+    min-width: 3em;
+    min-height: 3em;
+    cursor: pointer;
+}
+
+.page-content .box.plain .number {
+    font-size: 1em;
+}
+
+.pipes-only .overlay canvas {
+    pointer-events: none;
+    /* display: none; */
+}
+
+.pipes-only .overlay {
+    pointer-events: none;
+}
