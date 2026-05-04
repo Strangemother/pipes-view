@@ -9,7 +9,16 @@ class DivGeom {
     }
 
     quantize(node, value=100, keys=['x', 'y', 'w','h']) {
-        /* quantize the numbers to the value */
+        for(const key of keys) {
+            const currentValue = node?.[key]
+            if(typeof currentValue != 'number' || Number.isNaN(currentValue)) {
+                continue
+            }
+
+            node[key] = Math.round(currentValue * value) / value
+        }
+
+        return node
     }
 
     static getCenter(node) {
