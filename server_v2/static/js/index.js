@@ -39,10 +39,22 @@ const myData = {
     }
 
         , nodes: {
-                    a: (valuePromise)=> Promise.resolve(valuePromise).then((ints) => { console.log('a', ints); return ints.reduce((a,b)=>a+b); })
-                , b: (valuePromise)=> Promise.resolve(valuePromise).then((ints) => { console.log('b', ints); return Array.isArray(ints) ? ints.reduce((a,b)=>a+b) : ints; })
-                , c: (valuePromise)=> Promise.resolve(valuePromise).then((ints) => { console.log('c', ints); return Array.isArray(ints) ? ints.reduce((a,b)=>a+b) : ints; })
-                , d: (valuePromise)=> Promise.resolve(valuePromise).then((ints) => { console.log('d', ints); return Array.isArray(ints) ? ints.reduce((a,b)=>a+b) : ints; })
+                a: (valuePromise)=> Promise.resolve(valuePromise).then((ints) => { 
+                        console.log('a', ints); 
+                        return ints.reduce((a,b)=>a+b); 
+                    })
+                , b: (valuePromise)=> Promise.resolve(valuePromise).then((ints) => { 
+                        console.log('b', ints); 
+                        return (Array.isArray(ints) ? ints.reduce((a,b)=>a+b) : ints) + 1; 
+                    })
+                , c: (valuePromise)=> Promise.resolve(valuePromise).then((ints) => { 
+                        console.log('c', ints); 
+                        return (Array.isArray(ints) ? ints.reduce((a,b)=>a+b) : ints) + 2; 
+                    })
+                , d: (valuePromise)=> Promise.resolve(valuePromise).then((ints) => { 
+                        console.log('d', ints); 
+                        return (Array.isArray(ints) ? ints.reduce((a,b)=>a+b) : ints) + 3; 
+                    })
         }
 
     // , defaultNode: {}

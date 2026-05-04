@@ -16,7 +16,6 @@ class Stepper {
         this.origin = undefined
         this.rows = []
         this.stash = {}
-        this._history = []
         this._nextNodes = []
         this._started = false
         this._current = undefined;
@@ -174,13 +173,6 @@ class Stepper {
                 console.error('Result Error:', error)
             }
         )
-
-        this._history.push({
-            nodeName: nodeName,
-            nextNodes: Object.keys(nextNodes),
-            input: input,
-            execution: execution,
-        })
 
         return execution
     }
