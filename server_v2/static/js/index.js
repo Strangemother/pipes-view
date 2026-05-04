@@ -56,6 +56,29 @@ class DemoGraph extends Graph {
     }
 }
 
+const getDemoNodeValue = function(value) {
+    return Array.isArray(value) ? value.reduce((a, b) => a + b, 0) : value
+}
+
+const getDemoDelay = function() {
+    return 1000 + Math.floor(Math.random() * 4000)
+}
+
+const withDemoDelay = function(nodeName, resolver) {
+    return function(valuePromise) {
+        return Promise.resolve(valuePromise).then((value) => {
+            console.log(nodeName, value)
+            return new Promise((resolve) => {
+                let delay = getDemoDelay()
+                console.log(`${nodeName} delay`, delay)
+                setTimeout(() => {
+                    resolve(resolver(value))
+                }, delay)
+            })
+        })
+    }
+}
+
 const myData = {
     connectionsList: [
         ['a', 'b']
@@ -120,43 +143,19 @@ const myData = {
     }
 
         , nodes: {
-                a: (valuePromise)=> Promise.resolve(valuePromise).then((ints) => { 
-                        console.log('a', ints); 
-                        return ints.reduce((a,b)=>a+b); 
-                    })
-                , b: (valuePromise)=> Promise.resolve(valuePromise).then((ints) => { 
-                        console.log('b', ints); 
-                        return (Array.isArray(ints) ? ints.reduce((a,b)=>a+b) : ints) + 1; 
-                    })
-                , c: (valuePromise)=> Promise.resolve(valuePromise).then((ints) => { 
-                        console.log('c', ints); 
-                        return (Array.isArray(ints) ? ints.reduce((a,b)=>a+b) : ints) + 2; 
-                    })
-                , d: (valuePromise)=> Promise.resolve(valuePromise).then((ints) => { 
-                        console.log('d', ints); 
-                        return (Array.isArray(ints) ? ints.reduce((a,b)=>a+b) : ints) + 3; 
-                    })
-                , f: (valuePromise)=> Promise.resolve(valuePromise).then((ints) => {
-                        console.log('f', ints);
-                        return (Array.isArray(ints) ? ints.reduce((a,b)=>a+b) : ints) + 5;
-                    })
-                , g: (valuePromise)=> Promise.resolve(valuePromise).then((ints) => {
-                        console.log('g', ints);
-                        return (Array.isArray(ints) ? ints.reduce((a,b)=>a+b) : ints) + 6;
-                    })
+                a: withDemoDelay('a', (ints) => getDemoNodeValue(ints))
+                , b: withDemoDelay('b', (ints) => getDemoNodeValue(ints) + 1)
+                , c: withDemoDelay('c', (ints) => getDemoNodeValue(ints) + 2)
+                , d: withDemoDelay('d', (ints) => getDemoNodeValue(ints) + 3)
+                , f: withDemoDelay('f', (ints) => getDemoNodeValue(ints) + 5)
+                , g: withDemoDelay('g', (ints) => getDemoNodeValue(ints) + 6)
                 , e: {
                     mergeNode: true,
-                    handler: (valuePromise)=> Promise.resolve(valuePromise).then((ints) => {
-                        console.log('e', ints);
-                        return ints.reduce((a, b) => a + b, 0) + 4;
-                        })
+                    handler: withDemoDelay('e', (ints) => getDemoNodeValue(ints) + 4)
                     }
                 , h: {
                     mergeNode: true,
-                    handler: (valuePromise)=> Promise.resolve(valuePromise).then((ints) => {
-                        console.log('h', ints);
-                        return ints.reduce((a, b) => a + b, 0) + 8;
-                        })
+                    handler: withDemoDelay('h', (ints) => getDemoNodeValue(ints) + 8)
                     }
         }
 
