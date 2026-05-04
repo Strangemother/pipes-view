@@ -4,7 +4,7 @@ Connect to the backend, start receiving socket info.
  */
 
 
-const runIndexApp = function() {
+const runDragPanZoomTools = function() {
 
     // from pipes-ui-app.js
     // const app = createUIApp('#mini_app');
@@ -37,4 +37,4 @@ function initDragging(itemSelector) {
 }
 
 
-;runIndexApp();
+;runDragPanZoomTools();

@@ -1,0 +1,69 @@
+
+
+.panspace-container .box {
+    /* border: solid 1px red; */
+    background: #111;
+    min-width: 10em;
+    min-height: 6em;
+    border-radius: .5em;
+    /* margin: 1em; */
+    /* position: relative; */
+    /* position: absolute; */
+}
+
+.panspace-container .box {
+    display: flex;
+    /* display: grid; */
+    /* justify-content: center; */
+    /* align-items: center; */
+    /* font-size: 3em; */
+    /* resize: both; */
+    /* overflow: auto; */
+}
+
+.panspace-container .box .number {
+    font-size: 2em;
+    resize: both;
+}
+
+.panspace-container {
+    display: flex;
+    gap: 3em;
+}
+
+.box.drag-ready {
+    position: absolute;
+    resize: both;
+    overflow: auto;
+}
+
+.box .draggable-pip {
+    height: 1.4em;
+}
+
+.box .display-panel .content-value {
+    padding: 0;
+}
+
+.box.drag-ready.executing {
+    background: #020202;
+}
+
+.box.focus {
+    background: #1a1006;
+}
+
+.box.node-cycle .display-panel {
+    border-color: #c96512;
+}
+
+.box {
+    /* border: solid 3px; */
+    /* border-color: transparent; */
+    /* display: flex; */
+}
+
+.plain.box {
+    justify-content: center;
+    align-items: center;
+}

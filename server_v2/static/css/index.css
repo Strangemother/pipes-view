@@ -1,0 +1,237 @@
+label {
+    display: flex;
+    flex-wrap: wrap;
+    flex-direction: column;
+}
+
+label span.label {
+    display: flex;
+}
+
+form input[type=text], form textarea {
+    background: inherit;
+    color: inherit;
+    border: solid 1px black;
+    font: inherit;
+    padding: 0.3em 0.7em;
+}
+
+ul.form-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+}
+
+li.form-list-item {
+    padding: 0.3em 1em;
+}
+
+
+input[type=text], textarea {
+    background: #333;
+    color: inherit;
+    border: none;
+    font: inherit;
+}
+
+
+.widthed {
+    max-width: 72rem;
+    margin: auto;
+}
+
+
+option {
+    background-color: #222;
+}
+
+
+.display-panel .header {
+    /* padding: 0.5em 1.6rem; */
+}
+
+.display-panel .content {
+    display: flex;
+    flex-grow: 1;
+}
+
+.display-panel .content-value {
+    flex-grow: 1;
+    padding: 0em 1em;
+    justify-content: center;
+    display: flex;
+    align-items: center;
+}
+
+.display-panel .pips ul li {
+    background: #9f9416;
+    /* width: 0.7em; */
+    /* height: 0.7em; */
+    /* border-radius: 3em; */
+    color: black;
+    /* padding: 0 0.5em; */
+}
+
+.display-panel .pips ul {
+    display: flex;
+    flex-direction: column;
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    gap: 0.5rem;
+}
+
+.display-panel .inbound.pips {border-right: solid 1px #111;padding: 0.5em 0.5em 0 0;}
+
+.display-panel {
+    display: flex;
+    flex-direction: column;
+    flex-grow: 1;
+    /* height: 100%; */
+    /* outline: solid; */
+    border: solid 2px transparent;
+    border-radius: 0.5em;
+    /* border: inset; */
+}
+
+.example-window {
+    height: 100%;
+}
+
+.display-panel .outbound.pips {
+    padding: .5em 0 0.5em .5em;
+    border-left: solid 1px #111;
+}
+
+li.add-pip a {
+    line-height: inherit;
+    color: inherit;
+    text-decoration: none;
+    padding: 0.5em;
+}
+
+.display-panel .pips {
+    padding-top: .5em;
+}
+
+.display-panel .footer {
+    border-top: solid 1px #111;
+    font-size: 0.8em;
+    color: #555;
+    padding: 0.2rem;
+    display: flex;
+    justify-content: flex-start;
+}
+
+.draggable-pip.dragging {
+    color: black;
+    background: #05ab5e;
+    /* border-radius: 1em; */
+}
+
+.draggable-pip {
+    cursor: grab;
+    padding: 0 0.4em;
+}
+
+body.layer-space-container {
+    /* outline: solid 1px orange; */
+    outline-offset: -1px;
+    height: 100%;
+    display: grid;
+    grid-template-rows: auto 1fr auto;
+}
+
+html.layer-space-container {
+    height: 100%;
+}
+
+.layer-space {
+    min-height: 0;
+    overflow: hidden;
+    /* outline: solid 1px green; */
+    outline-offset: -2px;
+    display: grid;
+}
+
+.layer-space > * {
+    grid-area: 1/1/1/1;
+}
+
+.test-indicator {
+    width: 2em;
+    height: 2em;
+    background: darkred;
+    border-radius: 2em;
+}
+
+.canvas-container {display: grid;}
+
+.canvas-container > * {
+    grid-area: 1/1/1/1;
+    width: 100%;
+    height: 100%;
+}
+
+
+.layer-space main {
+    z-index: 3;
+    position: relative;
+}
+
+.canvas-container.back {
+    position: relative;
+    z-index: 2;
+}
+
+.canvas-container.fore {position: relative;z-index: 5;pointer-events: none;}
+
+.inbound.pips ul li {border-radius: 0 0.3em 0.3em 0em;}
+
+.outbound.pips ul li {
+    border-radius: 0.3em 0 0 0.3em;
+}
+
+
+.node-highlight .display-panel  {
+    outline: solid 2px #07ff08;
+    outline-offset: -2px;
+}
+
+
+.node-cycle .display-panel {
+    /* border: solid 2px #ff7707; */
+    /* outline-offset: 0px; */
+}
+
+.node-cycle.node-highlight .display-panel {
+    outline: solid 2px #c007ff;
+    outline-offset: -2px;
+}
+
+
+.winbox {
+    border-radius: 0.5em;
+}
+
+.winbox.focus .display-panel {
+    /* color: red; */
+    background: #140f02;
+}
+
+.display-panel .content-value .display-number {
+    font-size: 2em;
+}
+
+.winbox.executing {
+    border: solid 2px;
+}
+
+.winbox.executed {
+    border: solid 1px orange;
+}
+
+.page-content {
+    max-width: 1000px;
+    margin: auto;
+}

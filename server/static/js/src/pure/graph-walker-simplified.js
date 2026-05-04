@@ -153,8 +153,8 @@ class GraphWalker {
 			return null
 		}
 
-		const senderWindow = this.nodes[fromName]
-		const receiverWindow = this.nodes[toName]
+		const senderWindow = this.getNode(fromName);
+		const receiverWindow = this.getNode(toName);
 		if(senderWindow == undefined || receiverWindow == undefined) {
 			console.error('Cannot create connection; unknown window label.', { fromName, toName })
 			return null
@@ -189,6 +189,7 @@ class GraphWalker {
 	addConnecton(name, obj) {
 		this.connections[name] = obj
 	}
+
 	clearConnections() {
 		for(let connectionId in this.connections) {
 			delete this.connections[connectionId]
@@ -231,7 +232,7 @@ class GraphWalker {
     getNode(name) {
         // return the app within the node.
         // const win = this.getWindow(name)
-		return this.nodes[name]
+		return this.nodes[name] || {}
         // return win
     }
 }
