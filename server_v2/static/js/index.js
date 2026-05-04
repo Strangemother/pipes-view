@@ -11,12 +11,16 @@ const myData = {
         ['a', 'b']
         , ['b', 'c']
         , ['b', 'd']
+        , ['c', 'e']
+        , ['d', 'e']
     ]
 
     , connectionsDicts: [
         { sender: 'a', receiver: 'b', width: 3}
         , { sender: 'b', receiver: 'c' }
         , { sender: 'b', receiver: 'd' }
+        , { sender: 'c', receiver: 'e' }
+        , { sender: 'd', receiver: 'e' }
     ]
 
     , connectionsDictDict: {
@@ -28,13 +32,18 @@ const myData = {
             , from: ['a']
         }
         , c: {
-            to: ['d']
+            to: ['e']
             , from: ['b']
         }
 
         , d: {
-            // to: ['d']
-            from: ['c']
+            to: ['e']
+            ,
+            from: ['b']
+        }
+
+        , e: {
+            from: ['c', 'd']
         }
     }
 
@@ -55,6 +64,13 @@ const myData = {
                         console.log('d', ints); 
                         return (Array.isArray(ints) ? ints.reduce((a,b)=>a+b) : ints) + 3; 
                     })
+                , e: {
+                    mergeNode: true,
+                    handler: (valuePromise)=> Promise.resolve(valuePromise).then((ints) => {
+                        console.log('e', ints);
+                        return ints.reduce((a, b) => a + b, 0) + 4;
+                        })
+                    }
         }
 
     // , defaultNode: {}

@@ -52,7 +52,7 @@ class Stepper {
             this.start.apply(this, arguments)
         }
 
-        let currentRows = this.rows
+        let currentRows = this.mergeRows(this.rows)
         let nextRows = []
 
         this.rows = []
@@ -60,7 +60,7 @@ class Stepper {
 
         for(let row of currentRows) {
             let place = row.nodeName
-            let node = this.graph.getNode(place)
+            let node = this.getNodeConfig(place)
             let nextNodes = this.graph.getNextNodesDict(place) || {}
             let nextNodeNames = Object.keys(nextNodes)
             let execution = this.runTarget(place, node, nextNodes, row.input)
@@ -75,11 +75,49 @@ class Stepper {
             }
         }
 
+        nextRows = this.mergeRows(nextRows)
+
         this.rows = nextRows
         this._nextNodes = nextRows.map((row) => row.nodeName)
         this._current = this._nextNodes[0]
 
         return nextRows
+    }
+
+    mergeRows(rows) {
+        let mergedRows = []
+        let mergeBuckets = {}
+
+        for(let row of rows) {
+            let node = this.getNodeConfig(row.nodeName)
+
+            if(node.mergeNode !== true) {
+                mergedRows.push(row)
+                continue
+            }
+
+            let bucket = mergeBuckets[row.nodeName]
+            if(bucket == undefined) {
+                bucket = []
+                mergeBuckets[row.nodeName] = bucket
+                mergedRows.push(this.createRow(row.nodeName, bucket))
+            }
+
+            bucket.push(row.input)
+        }
+
+        return mergedRows.map((row) => {
+            if(Array.isArray(row.input) == false) {
+                return row
+            }
+
+            let mergedInput = row.input
+            if(mergedInput.length <= 1) {
+                return this.createRow(row.nodeName, mergedInput[0])
+            }
+
+            return this.createRow(row.nodeName, this.combineTrackedValues(mergedInput))
+        })
     }
 
     createRow(nodeName, input) {
@@ -89,8 +127,36 @@ class Stepper {
         }
     }
 
+    getNodeConfig(nodeName) {
+        let entry = this.graph.getNode(nodeName)
+        let handler = entry
+        let mergeNode = false
+
+        if(typeof entry == 'function') {
+            mergeNode = entry.mergeNode === true
+        } else if(entry != null && typeof entry == 'object') {
+            handler = entry.handler || entry.run || entry.execute || entry.fn || entry.func || entry.value
+            mergeNode = entry.mergeNode === true
+        }
+
+        if(typeof handler != 'function') {
+            throw new Error(`Node ${nodeName} is not callable`)
+        }
+
+        return {
+            name: nodeName,
+            handler: handler,
+            mergeNode: mergeNode,
+            entry: entry,
+        }
+    }
+
     createTrackedValue(value) {
         return this.trackPromise(Promise.resolve(value))
+    }
+
+    combineTrackedValues(inputs) {
+        return this.trackPromise(Promise.all(inputs.map((input) => input.promise)))
     }
 
     trackPromise(promise) {
@@ -154,14 +220,14 @@ class Stepper {
     runTarget(nodeName, node, nextNodes, input) {
         this._current = nodeName
         console.log(
-            'Run Node:', node,
+            'Run Node:', node.handler,
             '\nWith Promise:', input?.promise || input,
             '\nThen Next:', nextNodes,
             )
 
         /* Execute */
         let execution = this.trackPromise(
-            Promise.resolve().then(() => node.call(this, input.promise))
+            Promise.resolve().then(() => node.handler.call(this, input.promise))
         )
 
         execution.promise.then(
