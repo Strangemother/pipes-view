@@ -39,14 +39,14 @@ class Graph {
     }
 
     getNextNodesList(name) {
-        let ids = this.getNextNodeIds(name)
+        let ids = this.getNextNodeIds(name) || []
         let r = []
         ids.forEach((n)=>{ r.push(this.getNode(n) )})
         return r;
     }
 
     getNextNodesDict(name) {
-        let ids = this.getNextNodeIds(name)
+        let ids = this.getNextNodeIds(name) || []
         let r = {}
         ids.forEach((n)=>{ r[n]=this.getNode(n) })
         return r;
@@ -126,9 +126,12 @@ class Graph {
     }
 
     dictDict_connectionsDictDict(name, needle, result, connections){
-        let res = []
         let nodeConnections = connections[name]
-        return nodeConnections[needle]
+        if(nodeConnections == undefined) {
+            return []
+        }
+
+        return nodeConnections[needle] || []
     }
 
     dictDict_connectionsArrayDicts(name, needle, result, connections){

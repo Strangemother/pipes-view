@@ -18,6 +18,7 @@ class Stepper {
         this.stash = {}
         this._history = []
         this._nextNodes = []
+        this._started = false
         this._current = undefined;
     }
 
@@ -26,21 +27,30 @@ class Stepper {
     }
 
     start() {
-        return this.step.apply(this, arguments)
+        if(this.origin == undefined) {
+            return []
+        }
+
+        this.rows = [
+            this.createRow(
+                this.origin,
+                this.createTrackedValue(this.normalizeInput(Array.from(arguments)))
+            )
+        ]
+        this._nextNodes = [this.origin]
+        this._current = this.origin
+        this._started = true
+
+        return this.rows
     }
 
     step() {
         if(this.rows.length == 0) {
-            if(this.origin == undefined) {
+            if(this._started || this.origin == undefined) {
                 return []
             }
 
-            this.rows = [
-                this.createRow(
-                    this.origin,
-                    this.createTrackedValue(this.normalizeInput(Array.from(arguments)))
-                )
-            ]
+            this.start.apply(this, arguments)
         }
 
         let currentRows = this.rows

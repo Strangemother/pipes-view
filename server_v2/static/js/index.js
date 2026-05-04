@@ -38,12 +38,12 @@ const myData = {
         }
     }
 
-    , nodes: {
-          a: (...ints)=> { console.log('a', ints); return ints.reduce((a,b)=>a+b); }
-        , b: (...ints)=> { console.log('b', ints); return ints.reduce((a,b)=>a+b); }
-        , c: (...ints)=> { console.log('c', ints); return ints.reduce((a,b)=>a+b); }
-        , d: (...ints)=> { console.log('d', ints); return ints.reduce((a,b)=>a+b); }
-    }
+        , nodes: {
+                    a: (valuePromise)=> Promise.resolve(valuePromise).then((ints) => { console.log('a', ints); return ints.reduce((a,b)=>a+b); })
+                , b: (valuePromise)=> Promise.resolve(valuePromise).then((ints) => { console.log('b', ints); return Array.isArray(ints) ? ints.reduce((a,b)=>a+b) : ints; })
+                , c: (valuePromise)=> Promise.resolve(valuePromise).then((ints) => { console.log('c', ints); return Array.isArray(ints) ? ints.reduce((a,b)=>a+b) : ints; })
+                , d: (valuePromise)=> Promise.resolve(valuePromise).then((ints) => { console.log('d', ints); return Array.isArray(ints) ? ints.reduce((a,b)=>a+b) : ints; })
+        }
 
     // , defaultNode: {}
 }
