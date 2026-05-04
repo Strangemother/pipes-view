@@ -18,6 +18,8 @@ class Stepper {
         this.stash = {}
         this._nextNodes = []
         this._started = false
+        this._stepState = undefined
+        this._autoRunState = undefined
         this._current = undefined;
     }
 
@@ -31,6 +33,22 @@ class Stepper {
 
     onStep(rows) {
         return rows
+    }
+
+    onStepComplete(currentRows, nextRows, completed) {
+        return completed
+    }
+
+    onAutoStepScheduled(currentRows, nextRows, delay) {
+        return delay
+    }
+
+    onAutoStepComplete(currentRows, nextRows) {
+        return nextRows
+    }
+
+    onAutoStepStop(reason) {
+        return reason
     }
 
     onNodeExecute(nodeName, node, nextNodes, input) {
@@ -65,6 +83,7 @@ class Stepper {
         this._started = true
 
         let startRows = this.onStart(this.rows, Array.from(arguments))
+        this._stepState = undefined
         return startRows == undefined ? this.rows : startRows
     }
 
@@ -79,6 +98,7 @@ class Stepper {
 
         let currentRows = this.mergeRows(this.rows)
         let nextRows = []
+        let executions = []
 
         this.rows = []
         this._nextNodes = []
@@ -89,6 +109,7 @@ class Stepper {
             let nextNodes = this.graph.getNextNodesDict(place) || {}
             let nextNodeNames = Object.keys(nextNodes)
             let execution = this.runTarget(place, node, nextNodes, row.input)
+            executions.push(execution)
 
             if(nextNodeNames.length == 0) {
                 this.stashResult(place, execution)
@@ -105,9 +126,89 @@ class Stepper {
         this.rows = nextRows
         this._nextNodes = nextRows.map((row) => row.nodeName)
         this._current = this._nextNodes[0]
+        this._stepState = this.createStepState(currentRows, nextRows, executions)
 
         let steppedRows = this.onStep(nextRows)
         return steppedRows == undefined ? nextRows : steppedRows
+    }
+
+    createStepState(currentRows, nextRows, executions) {
+        let completion = Promise.allSettled(executions.map((execution) => execution.promise)).then((completed) => {
+            let nextCompleted = this.onStepComplete(currentRows, nextRows, completed)
+            return nextCompleted == undefined ? completed : nextCompleted
+        })
+
+        return {
+            currentRows: currentRows,
+            nextRows: nextRows,
+            executions: executions,
+            completion: completion,
+        }
+    }
+
+    getCurrentStepState() {
+        return this._stepState
+    }
+
+    waitForStepComplete() {
+        return this._stepState?.completion || Promise.resolve([])
+    }
+
+    autoStep(delay=0) {
+        this.stopAutoStep('restart')
+
+        let state = {
+            delay: delay,
+            stopped: false,
+            timerId: undefined,
+        }
+
+        let runNext = () => {
+            if(state.stopped) {
+                return Promise.resolve([])
+            }
+
+            let rows = this.step()
+            let stepState = this.getCurrentStepState()
+            return this.waitForStepComplete().then(() => {
+                if(state.stopped || rows.length == 0) {
+                    this._autoRunState = undefined
+                    this.onAutoStepComplete(stepState?.currentRows || [], rows)
+                    return rows
+                }
+
+                let nextDelay = this.onAutoStepScheduled(stepState?.currentRows || [], rows, state.delay)
+                nextDelay = nextDelay == undefined ? state.delay : nextDelay
+
+                return new Promise((resolve) => {
+                    state.timerId = setTimeout(() => {
+                        state.timerId = undefined
+                        resolve(runNext())
+                    }, nextDelay)
+                })
+            })
+        }
+
+        state.promise = runNext()
+        this._autoRunState = state
+        return state
+    }
+
+    stopAutoStep(reason='stopped') {
+        let state = this._autoRunState
+        if(state == undefined) {
+            return false
+        }
+
+        state.stopped = true
+        if(state.timerId != undefined) {
+            clearTimeout(state.timerId)
+            state.timerId = undefined
+        }
+
+        this._autoRunState = undefined
+        this.onAutoStepStop(reason)
+        return true
     }
 
     mergeRows(rows) {
