@@ -12,6 +12,14 @@ class DemoStepper extends Stepper {
         this.events = []
     }
 
+    getNodeElements() {
+        if(typeof document == 'undefined') {
+            return []
+        }
+
+        return Array.from(document.querySelectorAll('[data-graph-node]'))
+    }
+
     getNodeElement(nodeName) {
         if(typeof document == 'undefined') {
             return null
@@ -30,6 +38,18 @@ class DemoStepper extends Stepper {
         if(nextState != undefined) {
             element.classList.add(nextState)
         }
+    }
+
+    resetNodeStates() {
+        this.getNodeElements().forEach((element) => {
+            element.classList.remove('graph-node-execute', 'graph-node-complete')
+        })
+    }
+
+    onStart(rows, args) {
+        this.resetNodeStates()
+        this.events = []
+        return rows
     }
 
     onNodeExecute(nodeName, node, nextNodes, input) {
@@ -164,6 +184,35 @@ const myData = {
 
 
 gg = new DemoGraph(myData)
+
+window.prepareDemoStepper = function() {
+    window.demoStepper = gg.stepper('a')
+    window.demoStepper.start(1, 2)
+    return window.demoStepper
+}
+
+window.stepDemoStepper = function() {
+    return window.demoStepper && window.demoStepper.step()
+}
+
+window.resetDemoStepperView = function() {
+    if(window.demoStepper) {
+        window.demoStepper.resetNodeStates()
+        return
+    }
+
+    if(typeof document == 'undefined') {
+        return
+    }
+
+    document.querySelectorAll('[data-graph-node]').forEach((element) => {
+        element.classList.remove('graph-node-execute', 'graph-node-complete')
+    })
+}
+
+window.logDemoStepperState = function() {
+    console.log(window.demoStepper?.events, window.demoStepper?.stash)
+}
 // const aNode = gg.getNode('a')
 // if(aNode.n != 'a') {
 //     console.error('bad a node:', aNode)

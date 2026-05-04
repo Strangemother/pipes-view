@@ -39,9 +39,10 @@
             <div class="page-content">
                 <section class="graph-demo widthed">
                     <div class="graph-demo-controls">
-                        <button type="button" onclick="window.demoStepper = gg.stepper('a'); window.demoStepper.start(1, 2)">Prepare Stepper</button>
-                        <button type="button" onclick="window.demoStepper && window.demoStepper.step()">Step</button>
-                        <button type="button" onclick="console.log(window.demoStepper?.events, window.demoStepper?.stash)">Log State</button>
+                        <button type="button" onclick="window.prepareDemoStepper()">Prepare Stepper</button>
+                        <button type="button" onclick="window.stepDemoStepper()">Step</button>
+                        <button type="button" onclick="window.resetDemoStepperView()">Reset View</button>
+                        <button type="button" onclick="window.logDemoStepperState()">Log State</button>
                     </div>
 
                     <div class="graph-demo-grid">
