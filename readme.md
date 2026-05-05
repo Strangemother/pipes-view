@@ -1,4 +1,135 @@
-# Pipe view.
+# Pipes
+
+Pipes is a very simple graph library for executing nodes in a graph. It's designed to be easy to understand, without the complex theory.
+
+1. Run actions in flows
+2. Visualize flows 
+3. Easy build complex graphs
+
+## Getting Started
+
+Pipes is bundled as a single file. You can include it in your HTML with:
+
+```html
+<script src="path/to/graph-runtime.js"></script>
+```
+
+Here is the most minimal example of connecting two nodes:
+
+```js
+const graph = new Graph({
+  connections: {
+    a: ['b'],
+  },
+    nodes: {
+        a: (v) => v + 1,
+        b: (v) => v * 2,
+    },
+})
+
+const stepper = graph.stepper('a')
+stepper.start(10) // starts at node 'a' with value 10
+```
+
+That's it! This will _run_ the graph from the chosen start node. Your functions do whatever you want.
+
+## So What is it?
+
+It's a bunch of connections to your functions or objects. You can query to run the 'graph'.
+
+**What can it do?**
+
+A graph allows many paradigms. You can mimic extremely complex interconnected behavior, or use it to chain functions.
+Graphs can be used as data or runtime. This library allows both. 
+
+
+---
+
+## Connections and Node
+
+We can setup connections and nodes in a few different ways. First we need some nodes; we'll apply functions:
+
+```js
+nodes = {
+  a: (v) => v,
+  b: (v) => v + 1,
+  c: (v) => v + 2,
+  e: (v) => v.reduce((a, b) => a + b, 0),
+}
+```
+
+Connections can be defined as a simple adjacency list:
+
+```js
+connections = {
+  a: ['b', 'c'],
+  b: ['e'],
+  c: ['e'],
+}
+```
+
+This means 'a' sends to 'b' and 'c', and both 'b' and 'c' send to 'e'.
+
+Finally we can combine these into a graph:
+
+```js
+const graph = new Graph({
+  connections, nodes,
+})
+```
+
+This can be _read_ or _executed_. In both cases, the graph is traversed in topological order:
+
+    a -> b -> e
+     \
+      -> c -> e
+
+
+### Connection options
+
+connections can also be defined as a list of connection objects, which allows for more options:
+
+```js
+const graph = new Graph({
+  connections: [
+    { sender: 'a', receiver: 'b' },
+    { sender: 'a', receiver: 'c' },
+    { sender: 'b', receiver: 'e' },
+    { sender: 'c', receiver: 'e' },
+  ],
+})
+```
+
+### Merge nodes
+
+Merge nodes allow multiple incoming rows to become one call.
+
+If multiple upstream nodes target the same next node and that node has `mergeNode: true`, the stepper calls it once with the merged resolved values.
+
+```js
+const graph = new Graph({
+  connections: {
+    a: ['b', 'c'],
+    b: ['e'],
+    c: ['e'],
+  },
+  nodes: {
+    a: (v) => v,
+    b: (v) => v + 1,
+    c: (v) => v + 2,
+    e: {
+      mergeNode: true,
+      handler: (values) => values.reduce((a, b) => a + b, 0),
+    },
+  },
+})  
+```
+
+
+
+
+
+---
 
 ![screenshot](screenshot.png)
 
