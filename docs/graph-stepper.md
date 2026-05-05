@@ -80,6 +80,29 @@ class MyGraph extends Graph {
     return MyStepper
   }
 }
+
+### `graph.dataType = 'pipDict'`
+
+Use `pipDict` when each edge carries sender and receiver pip metadata.
+
+```js
+const graph = new Graph({
+  connectionsPipDicts: [
+    {
+      sender: { label: 'a', direction: 'outbound', pipIndex: 0 },
+      receiver: { label: 'b', direction: 'inbound', pipIndex: 1 },
+    },
+  ],
+  nodes: {
+    a: (value) => [value + 1],
+    b: (value) => value[1],
+  },
+})
+
+graph.dataType = 'pipDict'
+```
+
+This format preserves the full edge object, so a custom stepper can route by outbound and inbound pip index.
 ```
 
 ## Stepper API
@@ -217,6 +240,45 @@ Notes:
 
 - without `mergeNode: true`, the target node is called once per incoming row
 - with `mergeNode: true`, the target node is called once per frontier
+
+## Pip-index stepper
+
+Defined in `server_v2/static/js/src/graph-stepper.js` as `PipIndexStepper`.
+
+Use this stepper when node output channels and edge pip indices should control routing.
+
+```js
+const graph = new Graph({
+  connectionsPipDicts: [
+    {
+      sender: { label: 'a', direction: 'outbound', pipIndex: 0 },
+      receiver: { label: 'b', direction: 'inbound', pipIndex: 1 },
+    },
+    {
+      sender: { label: 'a', direction: 'outbound', pipIndex: 1 },
+      receiver: { label: 'c', direction: 'inbound', pipIndex: 0 },
+    },
+  ],
+  nodes: {
+    a: (value) => [value + 1, value + 2],
+    b: (value) => value[1],
+    c: (value) => value[0],
+  },
+})
+
+graph.dataType = 'pipDict'
+
+const stepper = graph.stepper('a', PipIndexStepper)
+stepper.start(10)
+```
+
+Behavior:
+
+- each outgoing edge selects a value from the node result using `sender.pipIndex`
+- the selected value is wrapped into the downstream input slot at `receiver.pipIndex`
+- merge nodes combine multiple inbound rows into one indexed input value
+
+For a runnable browser example, see `server_v2/static/js/index.js` and use `prepareDemoPipStepper()`.
 
 ## Hook methods
 

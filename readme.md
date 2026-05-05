@@ -8,6 +8,34 @@ Pipe view is a visual graph of windows. It allows you to connect windows togethe
 
 Under the hood we currently use winbox for the windows, and petite vue for the UI. The pipes are drawn on a canvas layer.
 
+## Tests
+
+JavaScript tests live in `tests/js` and run with Node's built-in test runner.
+
+Run them with:
+
+```bash
+npm test
+```
+
+## Build
+
+The v2 graph runtime can be bundled into one browser-ready file.
+
+Run:
+
+```bash
+npm run build
+```
+
+Output:
+
+```text
+server_v2/static/js/dist/graph-runtime.js
+```
+
+The bundle exposes `window.Graph`, `window.Stepper`, `window.PipIndexStepper`, and `window.GraphRuntime`.
+
 
 
 ## Update 0.1

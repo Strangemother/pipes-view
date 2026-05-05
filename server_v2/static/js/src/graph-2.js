@@ -57,6 +57,70 @@ class Graph {
         return r;
     }
 
+    getNextConnectionEntries() {
+        let n = `${this.dataType}_getNextConnectionEntries`
+        if(typeof this[n] == 'function') {
+            return this[n].apply(this, arguments)
+        }
+
+        let name = arguments[0]
+        return (this.getNextNodeIds(name) || []).map((nextNodeName) => {
+            return this.createConnectionEntry(name, nextNodeName)
+        })
+    }
+
+    getPrevConnectionEntries() {
+        let n = `${this.dataType}_getPrevConnectionEntries`
+        if(typeof this[n] == 'function') {
+            return this[n].apply(this, arguments)
+        }
+
+        let name = arguments[0]
+        return (this.getPrevNodeIds(name) || []).map((prevNodeName) => {
+            return this.createConnectionEntry(prevNodeName, name)
+        })
+    }
+
+    createConnectionEntry(senderLabel, receiverLabel, senderPipIndex=0, receiverPipIndex=0, line={}) {
+        return {
+            sender: {
+                label: senderLabel,
+                direction: 'outbound',
+                pipIndex: senderPipIndex,
+            },
+            receiver: {
+                label: receiverLabel,
+                direction: 'inbound',
+                pipIndex: receiverPipIndex,
+            },
+            line: line,
+        }
+    }
+
+    normalizeConnectionEntry(connection) {
+        if(connection == undefined || typeof connection != 'object') {
+            return null
+        }
+
+        let sender = connection.sender || {}
+        let receiver = connection.receiver || {}
+        let outbound = sender
+        let inbound = receiver
+
+        if(sender.direction == 'inbound' && receiver.direction == 'outbound') {
+            outbound = receiver
+            inbound = sender
+        }
+
+        return {
+            connection: connection,
+            sender: sender,
+            receiver: receiver,
+            outbound: outbound,
+            inbound: inbound,
+        }
+    }
+
     /* ------ */
 
     addConnection(){
@@ -187,12 +251,12 @@ class Graph {
 
     listList_getNextNodeIds(name, connections) {
         connections = connections || this.data.connectionsList
-        return this.connectionsArrayArray(name, 0, 1, connections)
+        return this.listList_connectionsArrayArray(name, 0, 1, connections)
     }
 
     listList_getPrevNodeIds(name, connections) {
         connections = connections || this.data.connectionsList
-        return this.connectionsArrayArray(name, 1, 0, connections)
+        return this.listList_connectionsArrayArray(name, 1, 0, connections)
     }
 
     listList_connectionsArrayArray(name, needle, result, connections){
@@ -200,6 +264,77 @@ class Graph {
         for(let ab of connections) {
             if(ab[needle] == name) {
                 res.push(ab[result])
+            }
+        }
+
+        return res
+    }
+
+    /* ------ */
+
+    pipDict_addConnection(sender, receiver, senderPipIndex=0, receiverPipIndex=0, line={}, connections) {
+        connections = connections || this.data.connectionsPipDicts
+        if(connections == undefined) {
+            connections = []
+            this.data.connectionsPipDicts = connections
+        }
+
+        let connection = sender
+        if(sender?.sender == undefined || sender?.receiver == undefined) {
+            connection = this.createConnectionEntry(sender, receiver, senderPipIndex, receiverPipIndex, line)
+        }
+
+        connections.push(connection)
+        return connection
+    }
+
+    pipDict_getNextNodeIds(name, connections) {
+        return this.pipDict_getNodeIds(name, true, connections)
+    }
+
+    pipDict_getPrevNodeIds(name, connections) {
+        return this.pipDict_getNodeIds(name, false, connections)
+    }
+
+    pipDict_getNextConnectionEntries(name, connections) {
+        return this.pipDict_getDirectionConnections(name, true, connections)
+    }
+
+    pipDict_getPrevConnectionEntries(name, connections) {
+        return this.pipDict_getDirectionConnections(name, false, connections)
+    }
+
+    pipDict_getNodeIds(name, outbound=true, connections) {
+        let seen = new Set()
+        let res = []
+
+        for(let connection of this.pipDict_getDirectionConnections(name, outbound, connections)) {
+            let entry = this.normalizeConnectionEntry(connection)
+            let target = outbound ? entry?.inbound?.label : entry?.outbound?.label
+            if(target == undefined || seen.has(target)) {
+                continue
+            }
+
+            seen.add(target)
+            res.push(target)
+        }
+
+        return res
+    }
+
+    pipDict_getDirectionConnections(name, outbound=true, connections) {
+        connections = connections || this.data.connectionsPipDicts || []
+
+        let res = []
+        for(let connection of connections) {
+            let entry = this.normalizeConnectionEntry(connection)
+            if(entry == null) {
+                continue
+            }
+
+            let source = outbound ? entry.outbound?.label : entry.inbound?.label
+            if(source == name) {
+                res.push(connection)
             }
         }
 

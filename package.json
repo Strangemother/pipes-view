@@ -1,0 +1,8 @@
+{
+  "name": "pipes-view",
+  "private": true,
+  "scripts": {
+    "build": "node scripts/build-browser-runtime.js",
+    "test": "node --test tests/js/*.test.js"
+  }
+}

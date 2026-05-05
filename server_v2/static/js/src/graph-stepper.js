@@ -393,3 +393,233 @@ class Stepper {
 
 
 }
+
+
+class PipIndexStepper extends Stepper {
+
+    step() {
+        if(this.rows.length == 0) {
+            if(this._started || this.origin == undefined) {
+                return []
+            }
+
+            this.start.apply(this, arguments)
+        }
+
+        let currentRows = this.mergeRows(this.rows)
+        let nextRows = []
+        let executions = []
+
+        this.rows = []
+        this._nextNodes = []
+
+        for(let row of currentRows) {
+            let place = row.nodeName
+            let node = this.getNodeConfig(place)
+            let nextConnections = this.graph.getNextConnectionEntries(place) || []
+            let nextNodes = this.getNextNodesDict(nextConnections)
+            let execution = this.runTarget(place, node, nextNodes, row.input)
+            executions.push(execution)
+
+            if(nextConnections.length == 0) {
+                this.stashResult(place, execution)
+                continue
+            }
+
+            for(let connection of nextConnections) {
+                let routedExecution = this.routeExecutionToConnection(execution, connection)
+                let nextInput = this.createReceiverTrackedInput(connection, routedExecution)
+                nextRows.push(this.createConnectionRow(connection, nextInput))
+            }
+        }
+
+        nextRows = this.mergeRows(nextRows)
+
+        this.rows = nextRows
+        this._nextNodes = nextRows.map((row) => row.nodeName)
+        this._current = this._nextNodes[0]
+        this._stepState = this.createStepState(currentRows, nextRows, executions)
+
+        let steppedRows = this.onStep(nextRows)
+        return steppedRows == undefined ? nextRows : steppedRows
+    }
+
+    createRow(nodeName, input, connection=undefined) {
+        let row = super.createRow(nodeName, input)
+        if(connection == undefined) {
+            return row
+        }
+
+        let entry = this.graph.normalizeConnectionEntry(connection)
+        row.connection = connection
+        row.senderPipIndex = entry?.outbound?.pipIndex
+        row.receiverPipIndex = entry?.inbound?.pipIndex
+        return row
+    }
+
+    createConnectionRow(connection, input) {
+        let entry = this.graph.normalizeConnectionEntry(connection)
+        return this.createRow(entry?.inbound?.label, input, connection)
+    }
+
+    getNextNodesDict(connections) {
+        let nextNodes = {}
+        for(let connection of connections) {
+            let entry = this.graph.normalizeConnectionEntry(connection)
+            let nextNodeName = entry?.inbound?.label
+            if(nextNodeName == undefined) {
+                continue
+            }
+
+            nextNodes[nextNodeName] = this.graph.getNode(nextNodeName)
+        }
+
+        return nextNodes
+    }
+
+    mergeRows(rows) {
+        let mergedRows = []
+        let mergeBuckets = {}
+
+        for(let row of rows) {
+            let node = this.getNodeConfig(row.nodeName)
+
+            if(node.mergeNode !== true) {
+                mergedRows.push(row)
+                continue
+            }
+
+            let bucket = mergeBuckets[row.nodeName]
+            if(bucket == undefined) {
+                bucket = []
+                mergeBuckets[row.nodeName] = bucket
+                mergedRows.push({
+                    nodeName: row.nodeName,
+                    mergeRows: bucket,
+                })
+            }
+
+            bucket.push(row)
+        }
+
+        return mergedRows.map((row) => {
+            if(Array.isArray(row.mergeRows) == false) {
+                return row
+            }
+
+            if(row.mergeRows.length <= 1) {
+                return row.mergeRows[0]
+            }
+
+            return this.createRow(
+                row.nodeName,
+                this.combineIndexedTrackedValues(row.mergeRows.map((mergeRow) => mergeRow.input))
+            )
+        })
+    }
+
+    combineIndexedTrackedValues(inputs) {
+        return this.trackPromise(
+            Promise.all(inputs.map((input) => input.promise)).then((values) => {
+                return this.mergeIndexedValues(values)
+            })
+        )
+    }
+
+    mergeIndexedValues(values) {
+        let merged = []
+        let hasIndexedValue = false
+
+        for(let value of values) {
+            if(Array.isArray(value)) {
+                hasIndexedValue = true
+                value.forEach((slotValue, pipIndex) => {
+                    if(slotValue == undefined) {
+                        return
+                    }
+
+                    this.mergeIndexedSlot(merged, pipIndex, slotValue)
+                })
+                continue
+            }
+
+            this.mergeIndexedSlot(merged, 0, value)
+        }
+
+        if(hasIndexedValue) {
+            return merged
+        }
+
+        if(merged.length == 1 && Array.isArray(merged[0]) == false) {
+            return merged[0]
+        }
+
+        return merged
+    }
+
+    mergeIndexedSlot(target, pipIndex, value) {
+        if(target[pipIndex] == undefined) {
+            target[pipIndex] = value
+            return target
+        }
+
+        if(Array.isArray(target[pipIndex])) {
+            target[pipIndex].push(value)
+            return target
+        }
+
+        target[pipIndex] = [target[pipIndex], value]
+        return target
+    }
+
+    routeExecutionToConnection(execution, connection) {
+        let entry = this.graph.normalizeConnectionEntry(connection)
+        let senderPipIndex = entry?.outbound?.pipIndex
+
+        return this.trackPromise(
+            execution.promise.then((value) => {
+                return this.getOutputValueForPip(value, senderPipIndex)
+            })
+        )
+    }
+
+    createReceiverTrackedInput(connection, execution) {
+        let entry = this.graph.normalizeConnectionEntry(connection)
+        let receiverPipIndex = entry?.inbound?.pipIndex
+
+        if(receiverPipIndex == undefined) {
+            return execution
+        }
+
+        return this.trackPromise(
+            execution.promise.then((value) => {
+                let indexedInput = []
+                indexedInput[receiverPipIndex] = value
+                return indexedInput
+            })
+        )
+    }
+
+    getOutputValueForPip(value, pipIndex) {
+        if(pipIndex == undefined) {
+            return value
+        }
+
+        if(Array.isArray(value) && pipIndex in value) {
+            return value[pipIndex]
+        }
+
+        if(value != null && typeof value == 'object') {
+            if(pipIndex in value) {
+                return value[pipIndex]
+            }
+
+            let pipKey = String(pipIndex)
+            if(pipKey in value) {
+                return value[pipKey]
+            }
+        }
+
+        return value
+    }
+}

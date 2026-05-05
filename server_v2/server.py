@@ -13,6 +13,10 @@ def main():
 def hello_world():
     return render_template('index.html')
 
+@app.route("/dist/")
+def dist_version():
+    return render_template('index-dist.html')
+
 
 if __name__ == '__main__':
     main()
