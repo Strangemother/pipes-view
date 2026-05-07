@@ -163,9 +163,14 @@ Output:
 
 ```text
 server_v2/static/js/dist/graph-runtime.js
+server_v1/static/js/dist/pipes-runtime.js
 ```
 
 The bundle exposes `window.Graph`, `window.Stepper`, `window.PipIndexStepper`, and `window.GraphRuntime`.
+
+The pipes bundle exposes `window.PipesTool`, `window.createPipesRuntime`, and `window.PipesRuntime`.
+
+Component-specific pipes documentation lives in `server_v1/static/js/README.md`.
 
 
 

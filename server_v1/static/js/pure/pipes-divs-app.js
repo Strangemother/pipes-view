@@ -179,27 +179,18 @@ const runPipes = function(conf) {
     - create group tool
     - spawn addons (dragging, utils)
     */
-   let backName = conf.backLayerSelector || '.canvas-container.back canvas'
-   let foreName = conf.foreLayerSelector || '.canvas-container.fore canvas'
+    const runtime = createPipesRuntime(conf)
 
-    const backLayer = new CanvasLayer(backName)
-    const foreLayer = new CanvasLayer(foreName)
-
-    // dirty for now.
-    const clItems = new CanvasLayerGroup(backLayer, foreLayer)
-    window.clItems = clItems
-
-
-    // Drag and zoom functionality.
+    // Drag and zoom functionality stays in the view shell.
 
     const infiniteDrag = new ZoomableInfiniteDrag(
                 conf.dragspaceSelector || 'main',
                 '.box'
             )
 
-    /* Convenience tool. */
-    const pipesTool = new PipesTool(conf);
-    window.pipesTool = pipesTool
+    return Object.assign({
+        infiniteDrag: infiniteDrag,
+    }, runtime)
 
 }
 
