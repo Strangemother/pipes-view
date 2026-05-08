@@ -14,9 +14,13 @@ The stepper is a small execution engine for a graph of named nodes.
 
 Primary source files:
 
-- `server_v2/static/js/src/graph-2.js`
-- `server_v2/static/js/src/graph-stepper.js`
+- `graph/src/graph.js`
+- `graph/src/graph-stepper.js`
 - demo usage: `server_v2/static/js/index.js`
+
+Compatibility bundle for the existing v2 demo:
+
+- `server_v2/static/js/dist/graph-runtime.js`
 
 ## Basic setup
 

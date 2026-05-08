@@ -12,10 +12,14 @@ The pipes runtime is the rendering and connection layer that sits around node UI
 
 Primary source files:
 
-- `server_v1/static/js/src/pipes-runtime.js`
-- `server_v1/static/js/src/pipes-tool.js`
-- `server_v1/static/js/src/canvas-layer.js`
-- built bundle: `server_v1/static/js/dist/pipes-runtime.js`
+- `pipes/src/pipes-runtime.js`
+- `pipes/src/pipes-tool.js`
+- `pipes/src/canvas-layer.js`
+- built bundle: `pipes/dist/pipes-runtime.js`
+
+Compatibility bundle for the existing v1 demo:
+
+- `server_v1/static/js/dist/pipes-runtime.js`
 
 ## Package boundary
 

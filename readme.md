@@ -162,6 +162,8 @@ npm run build
 Output:
 
 ```text
+graph/dist/graph-runtime.js
+pipes/dist/pipes-runtime.js
 server_v2/static/js/dist/graph-runtime.js
 server_v1/static/js/dist/pipes-runtime.js
 ```
@@ -171,6 +173,11 @@ The bundle exposes `window.Graph`, `window.Stepper`, `window.PipIndexStepper`, a
 The pipes bundle exposes `window.PipesTool`, `window.createPipesRuntime`, and `window.PipesRuntime`.
 
 Component-specific pipes documentation lives in `server_v1/static/js/README.md`.
+
+Root package entrypoints:
+
+- `graph/README.md`
+- `pipes/README.md`
 
 
 

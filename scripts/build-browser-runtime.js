@@ -8,7 +8,6 @@ const readSource = function(filePath) {
 }
 
 const writeBundle = function(bundle) {
-    const outputDir = path.dirname(bundle.outputFile)
     const joinedSources = bundle.runtimeFiles.map(readSource).join('\n\n')
     const bundleSource = [
         '/*',
@@ -23,19 +22,25 @@ const writeBundle = function(bundle) {
         '',
     ].join('\n')
 
-    fs.mkdirSync(outputDir, { recursive: true })
-    fs.writeFileSync(bundle.outputFile, bundleSource)
-    console.log(`Built ${path.relative(repoRoot, bundle.outputFile)}`)
+    for(const outputFile of bundle.outputFiles) {
+        const outputDir = path.dirname(outputFile)
+        fs.mkdirSync(outputDir, { recursive: true })
+        fs.writeFileSync(outputFile, bundleSource)
+        console.log(`Built ${path.relative(repoRoot, outputFile)}`)
+    }
 }
 
 const bundles = [
     {
-        header: 'Browser bundle for the v2 graph runtime.',
+        header: 'Browser bundle for the graph runtime.',
         runtimeFiles: [
-            path.join(repoRoot, 'server_v2', 'static', 'js', 'src', 'graph-stepper.js'),
-            path.join(repoRoot, 'server_v2', 'static', 'js', 'src', 'graph-2.js'),
+            path.join(repoRoot, 'graph', 'src', 'graph-stepper.js'),
+            path.join(repoRoot, 'graph', 'src', 'graph.js'),
         ],
-        outputFile: path.join(repoRoot, 'server_v2', 'static', 'js', 'dist', 'graph-runtime.js'),
+        outputFiles: [
+            path.join(repoRoot, 'graph', 'dist', 'graph-runtime.js'),
+            path.join(repoRoot, 'server_v2', 'static', 'js', 'dist', 'graph-runtime.js'),
+        ],
         exportSource: [
             '    global.Stepper = Stepper',
             '    global.PipIndexStepper = PipIndexStepper',
@@ -44,20 +49,23 @@ const bundles = [
         ].join('\n'),
     },
     {
-        header: 'Browser bundle for the v1 pipes runtime.',
+        header: 'Browser bundle for the pipes runtime.',
         runtimeFiles: [
-            path.join(repoRoot, 'server_v1', 'static', 'js', 'src', 'pipe-events.js'),
-            path.join(repoRoot, 'server_v1', 'static', 'js', 'src', 'canvas-layer.js'),
-            path.join(repoRoot, 'server_v1', 'static', 'js', 'src', 'pens', 'straight-lines.js'),
-            path.join(repoRoot, 'server_v1', 'static', 'js', 'src', 'pens', 'curve-lines.js'),
-            path.join(repoRoot, 'server_v1', 'static', 'js', 'src', 'pens', 's-curve-lines.js'),
-            path.join(repoRoot, 'server_v1', 'static', 'js', 'src', 'pure', 'graph-walker.js'),
-            path.join(repoRoot, 'server_v1', 'static', 'js', 'src', 'graph-highlighter.js'),
-            path.join(repoRoot, 'server_v1', 'static', 'js', 'src', 'pure', 'graph-executor.js'),
-            path.join(repoRoot, 'server_v1', 'static', 'js', 'src', 'pipes-tool.js'),
-            path.join(repoRoot, 'server_v1', 'static', 'js', 'src', 'pipes-runtime.js'),
+            path.join(repoRoot, 'pipes', 'src', 'pipe-events.js'),
+            path.join(repoRoot, 'pipes', 'src', 'canvas-layer.js'),
+            path.join(repoRoot, 'pipes', 'src', 'pens', 'straight-lines.js'),
+            path.join(repoRoot, 'pipes', 'src', 'pens', 'curve-lines.js'),
+            path.join(repoRoot, 'pipes', 'src', 'pens', 's-curve-lines.js'),
+            path.join(repoRoot, 'pipes', 'src', 'graph', 'graph-walker.js'),
+            path.join(repoRoot, 'pipes', 'src', 'graph', 'graph-highlighter.js'),
+            path.join(repoRoot, 'pipes', 'src', 'graph', 'graph-executor.js'),
+            path.join(repoRoot, 'pipes', 'src', 'pipes-tool.js'),
+            path.join(repoRoot, 'pipes', 'src', 'pipes-runtime.js'),
         ],
-        outputFile: path.join(repoRoot, 'server_v1', 'static', 'js', 'dist', 'pipes-runtime.js'),
+        outputFiles: [
+            path.join(repoRoot, 'pipes', 'dist', 'pipes-runtime.js'),
+            path.join(repoRoot, 'server_v1', 'static', 'js', 'dist', 'pipes-runtime.js'),
+        ],
         exportSource: [
             '    global.dispatchRequestDrawEvent = dispatchRequestDrawEvent',
             '    global.dispatchFocusNodeEvent = dispatchFocusNodeEvent',

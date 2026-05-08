@@ -4,6 +4,9 @@ This is the quickest way to use the pipes layer as it exists today.
 
 If you want to draw connections between node tips in the browser, this is the part you import.
 
+Canonical source now lives at the repo root in `pipes/`.
+This `server_v1/static/js` area remains the demo consumer and compatibility location.
+
 ## Use It Now
 
 1. Build the browser bundle.

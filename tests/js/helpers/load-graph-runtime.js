@@ -7,8 +7,8 @@ let cachedRuntime = undefined
 const getRuntimeFilePaths = function() {
     const repoRoot = path.resolve(__dirname, '..', '..', '..')
     return [
-        path.join(repoRoot, 'server_v2', 'static', 'js', 'src', 'graph-stepper.js'),
-        path.join(repoRoot, 'server_v2', 'static', 'js', 'src', 'graph-2.js'),
+        path.join(repoRoot, 'graph', 'src', 'graph-stepper.js'),
+        path.join(repoRoot, 'graph', 'src', 'graph.js'),
     ]
 }
 
