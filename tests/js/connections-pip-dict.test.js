@@ -174,3 +174,38 @@ test('connectionsPipDicts also works with async pip-aware handlers', async () =>
     /* assert */
     assert.deepEqual(toPlain(stepper.stash), { finish: [21] })
 })
+
+test('connectionsPipDicts addConnection and removeConnection match pip endpoints', () => {
+    /* setup */
+    const { Graph } = loadGraphRuntime()
+
+    const graph = new Graph({
+        connectionsPipDicts: [],
+        nodes: {},
+    })
+
+    graph.dataType = 'pipDict'
+
+    /* run */
+    const connection = graph.addConnection('start', 'finish', 1, 2, { width: 4 })
+
+    /* assert */
+    assert.deepEqual(toPlain(graph.data.connectionsPipDicts), [
+        {
+            sender: { label: 'start', direction: 'outbound', pipIndex: 1 },
+            receiver: { label: 'finish', direction: 'inbound', pipIndex: 2 },
+            line: { width: 4 },
+        },
+    ])
+    assert.deepEqual(Array.from(graph.getNextNodeIds('start')), ['finish'])
+    assert.deepEqual(Array.from(graph.getPrevNodeIds('finish')), ['start'])
+    assert.deepEqual(toPlain(graph.getNextConnectionEntries('start')), [toPlain(connection)])
+
+    /* run */
+    assert.equal(graph.removeConnection(connection), true)
+
+    /* assert */
+    assert.deepEqual(toPlain(graph.data.connectionsPipDicts), [])
+    assert.deepEqual(Array.from(graph.getNextNodeIds('start')), [])
+    assert.deepEqual(Array.from(graph.getPrevNodeIds('finish')), [])
+})

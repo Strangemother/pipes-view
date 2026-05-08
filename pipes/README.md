@@ -9,7 +9,6 @@ Use this directory as the current package boundary for the pipes tool.
 - `src/pipe-events.js`
 - `src/canvas-layer.js`
 - `src/pens/`
-- `src/graph/`
 - `src/pipes-tool.js`
 - `src/pipes-runtime.js`
 - `dist/pipes-runtime.js`
@@ -43,6 +42,7 @@ Globals:
 - `window.createPipesRuntime`
 - `window.PipesTool`
 - `window.PipesRuntime`
+- `window.dispatchRemovePipeEvent`
 
 ## Use It Now
 
@@ -148,6 +148,8 @@ app.windowMap
 app.getGraphNodeElement(name)
 ```
 
+Only needed when you inject external walker/highlighter helpers into `PipesTool`.
+
 Used by restore/import flows:
 
 ```js
@@ -164,7 +166,12 @@ runtime.pipesTool.animDraw()
 runtime.pipesTool.save('my-pipes')
 runtime.pipesTool.restore('my-pipes')
 runtime.pipesTool.clear()
+runtime.pipesTool.deletePipe(connection)
 ```
+
+Rendered pipes can be removed directly by right-clicking a line on the
+foreground canvas, or programmatically with `deletePipe(connection)` or
+`dispatchRemovePipeEvent(connection)`.
 
 Returned object:
 

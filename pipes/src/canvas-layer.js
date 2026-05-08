@@ -26,11 +26,63 @@ class CanvasLayerGroup {
     constructor(...layers) {
         this.layers = layers
         document.addEventListener('connectnodes', this.connectNodesEvent.bind(this))
+        document.addEventListener('removepipe', this.removeConnectionEvent.bind(this))
+        this.bindDeletePipeGesture()
     }
 
     connectNodesEvent(event) {
         let obj = event.detail
         return this.connectNodes(obj)
+    }
+
+    removeConnectionEvent(event) {
+        return this.removeConnection(event.detail)
+    }
+
+    bindDeletePipeGesture() {
+        const targetLayer = this.layers?.[this.layers.length - 1]
+        const canvas = targetLayer?.canvas
+        if(canvas == undefined || canvas.addEventListener == undefined) {
+            return
+        }
+
+        this._boundDeletePipeGesture = this._boundDeletePipeGesture || this.onDeletePipeGesture.bind(this)
+        canvas.addEventListener('contextmenu', this._boundDeletePipeGesture)
+    }
+
+    onDeletePipeGesture(event) {
+        event.preventDefault()
+        const point = this.getCanvasPointFromEvent(event)
+        if(point == null) {
+            return false
+        }
+
+        return this.removeConnectionNearPoint(point.x, point.y)
+    }
+
+    getCanvasPointFromEvent(event) {
+        const targetLayer = this.layers?.[this.layers.length - 1]
+        const canvas = targetLayer?.canvas
+        if(canvas == undefined || canvas.getBoundingClientRect == undefined) {
+            return null
+        }
+
+        const rect = canvas.getBoundingClientRect()
+        const scaleX = rect.width == 0 ? 1 : canvas.width / rect.width
+        const scaleY = rect.height == 0 ? 1 : canvas.height / rect.height
+
+        return {
+            x: (event.clientX - rect.left) * scaleX,
+            y: (event.clientY - rect.top) * scaleY,
+        }
+    }
+
+    getConnectionId(obj) {
+        if(obj?.sender == undefined || obj?.receiver == undefined) {
+            return null
+        }
+
+        return `${obj.sender.label}-${obj.sender.pipIndex}-${obj.receiver.label}-${obj.receiver.pipIndex}`
     }
 
     connectNodes(obj) {
@@ -58,13 +110,14 @@ class CanvasLayerGroup {
         let senderUnit = app.getTip(obj.sender.label, obj.sender.direction, obj.sender.pipIndex)
         let receiverUnit = app.getTip(obj.receiver.label, obj.receiver.direction, obj.receiver.pipIndex)
 
-        let _id = `${obj.sender.label}-${obj.sender.pipIndex}-${obj.receiver.label}-${obj.receiver.pipIndex}`
+        let _id = this.getConnectionId(obj)
 
         let store = pipeData.connections[_id];
 
         if(store == undefined) {
             // make a new one
             perfLog('Stashed', _id)
+            pipeData.raw.push(obj)
             pipeData.connections[_id] = {
                 obj
                 , senderUnit
@@ -79,6 +132,169 @@ class CanvasLayerGroup {
         }
     }
 
+    removeConnection(target) {
+        let connectionId = typeof target == 'string' ? target : this.getConnectionId(target)
+        if(connectionId == null) {
+            return false
+        }
+
+        let existing = pipeData.connections[connectionId]
+        if(existing == undefined) {
+            return false
+        }
+
+        delete pipeData.connections[connectionId]
+        pipeData.raw = pipeData.raw.filter((entry) => this.getConnectionId(entry) != connectionId)
+
+        for(let layer of this.layers) {
+            if(layer?.lines != undefined) {
+                delete layer.lines[connectionId]
+            }
+        }
+
+        dispatchRequestDrawEvent({ connectionId })
+        return true
+    }
+
+    clearConnections() {
+        pipeData.raw.length = 0
+        pipeData.connections = {}
+
+        for(let layer of this.layers) {
+            if(layer?.lines != undefined) {
+                layer.lines = {}
+            }
+        }
+
+        dispatchRequestDrawEvent()
+    }
+
+    removeConnectionNearPoint(x, y, tolerance=12) {
+        const lineLayer = this.layers?.[1]
+        const lines = Object.values(lineLayer?.lines || {})
+        if(lines.length == 0) {
+            return false
+        }
+
+        let bestLine = null
+        let bestDistance = Infinity
+        for(let line of lines) {
+            const distance = this.getLineHitDistance(line, x, y)
+            if(distance < bestDistance) {
+                bestDistance = distance
+                bestLine = line
+            }
+        }
+
+        if(bestLine == null) {
+            return false
+        }
+
+        const lineWidth = Number(bestLine?.obj?.width) || 2
+        if(bestDistance > Math.max(tolerance, lineWidth + 6)) {
+            return false
+        }
+
+        return this.removeConnection(bestLine._id)
+    }
+
+    getLineHitDistance(line, x, y) {
+        const points = this.getLineSamplePoints(line)
+        if(points.length < 2) {
+            return Infinity
+        }
+
+        let best = Infinity
+        for(let index = 1; index < points.length; index++) {
+            const distance = this.distanceToSegment({ x, y }, points[index - 1], points[index])
+            if(distance < best) {
+                best = distance
+            }
+        }
+
+        return best
+    }
+
+    getLineSamplePoints(line, samples=24) {
+        if(line == undefined || line.a == undefined || line.b == undefined) {
+            return []
+        }
+
+        const design = this.layers?.[1]?.getLineDesign(line) || 's-curve'
+        if(design == 'straight') {
+            return [line.a, line.b]
+        }
+
+        const dx = line.b.x - line.a.x
+        const minHandle = 24
+        const handleFactor = 0.35
+        const handle = Math.max(minHandle, Math.abs(dx) * handleFactor)
+        let c1x
+        let c2x
+
+        if(design == 'curve') {
+            const sign = dx >= 0 ? 1 : -1
+            c1x = line.a.x + (sign * handle)
+            c2x = line.b.x - (sign * handle)
+        } else {
+            const fallbackSenderSign = dx >= 0 ? 1 : -1
+            const fallbackReceiverSign = -fallbackSenderSign
+            const senderSign = line.senderDirection == 'outbound'
+                ? 1
+                : (line.senderDirection == 'inbound' ? -1 : fallbackSenderSign)
+            const receiverSign = line.receiverDirection == 'inbound'
+                ? -1
+                : (line.receiverDirection == 'outbound' ? 1 : fallbackReceiverSign)
+            c1x = line.a.x + (senderSign * handle)
+            c2x = line.b.x + (receiverSign * handle)
+        }
+
+        const points = []
+        for(let index = 0; index <= samples; index++) {
+            const t = index / samples
+            points.push(this.getBezierPoint(
+                { x: line.a.x, y: line.a.y },
+                { x: c1x, y: line.a.y },
+                { x: c2x, y: line.b.y },
+                { x: line.b.x, y: line.b.y },
+                t,
+            ))
+        }
+
+        return points
+    }
+
+    getBezierPoint(a, b, c, d, t) {
+        const mt = 1 - t
+        const mt2 = mt * mt
+        const t2 = t * t
+        const x = (mt2 * mt * a.x)
+            + (3 * mt2 * t * b.x)
+            + (3 * mt * t2 * c.x)
+            + (t2 * t * d.x)
+        const y = (mt2 * mt * a.y)
+            + (3 * mt2 * t * b.y)
+            + (3 * mt * t2 * c.y)
+            + (t2 * t * d.y)
+
+        return { x, y }
+    }
+
+    distanceToSegment(point, a, b) {
+        const dx = b.x - a.x
+        const dy = b.y - a.y
+        if(dx == 0 && dy == 0) {
+            return Math.hypot(point.x - a.x, point.y - a.y)
+        }
+
+        const lengthSquared = (dx * dx) + (dy * dy)
+        const projection = (((point.x - a.x) * dx) + ((point.y - a.y) * dy)) / lengthSquared
+        const clamped = Math.max(0, Math.min(1, projection))
+        const px = a.x + (clamped * dx)
+        const py = a.y + (clamped * dy)
+        return Math.hypot(point.x - px, point.y - py)
+    }
+
     animDraw(...args) {
         /*
         Perform animated draw of the connections.
@@ -91,7 +307,7 @@ class CanvasLayerGroup {
         Draws will only occur if the view is _dirty_:
 
         - When a new connection is made (connectNodes is called)
-        - When a connection is removed (not implemented yet)
+        - When a connection is removed
         - When a node moves.
 
         this is done though an event `requestDraw` that should be emitted whenever a redraw is needed.

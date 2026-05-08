@@ -15,15 +15,10 @@ class PipesTool {
     //  user tool to access all the bits easily.
     filename = 'pipes-tool-graph'
     constructor(conf={}) {
-        let T = {}
-        try{
-            T = new WorkTasks
-        } catch{}
-
-        this.app = conf.app || app
-        this.walker = conf.walker || new GraphExecutor({ app: this.app, taskMap: T })
-        this.lights = new GraphHighlighter({ app: this.app, walker: this.walker })
-        this.layerGroup = conf.layerGroup || clItems
+        this.app = conf.app || globalThis.app || { windowMap: {} }
+        this.walker = conf.walker || null
+        this.lights = conf.lights || null
+        this.layerGroup = conf.layerGroup || globalThis.clItems
     }
 
     draw(){
@@ -32,30 +27,59 @@ class PipesTool {
 
     save(name = this.filename) {
         // simple save method
+        if(this.walker?.saveToLocalStorage == undefined) {
+            console.warn('PipesTool.save requires an injected walker with saveToLocalStorage().')
+            return false
+        }
         this.walker.saveToLocalStorage(name)
+        return true
     }
 
     restore(name = this.filename) {
+        if(this.walker?.restoreFromLocalStorage == undefined || this.walker?.restorePositions == undefined) {
+            console.warn('PipesTool.restore requires an injected walker with local-storage restore helpers.')
+            return false
+        }
         this.walker.restoreFromLocalStorage(name)
         this.walker.restorePositions(name)
         setTimeout(() => {
             this.draw()
         }, 300);
+        return true
     }
 
     clear(){
         /* Wipe from interface. */
-        this.walker.clearConnections()
+        if(this.walker?.clearConnections) {
+            this.walker.clearConnections()
+        } else {
+            this.layerGroup.clearConnections()
+        }
         this.draw()
-        for(let k in this.app.windowMap) {
-            let _winbox = this.app.windowMap[k]
-            delete this.walker.windows[k]
+        const windowMap = this.app.windowMap || {}
+        for(let k in windowMap) {
+            let _winbox = windowMap[k]
+            if(this.walker?.windows) {
+                delete this.walker.windows[k]
+            }
             _winbox.unmount()
             _winbox.close()
 
         }
 
         this.app.windowMap = {}
+    }
+
+    removePipe(target) {
+        return this.layerGroup.removeConnection(target)
+    }
+
+    removeConnection(target) {
+        return this.removePipe(target)
+    }
+
+    deletePipe(target) {
+        return this.removePipe(target)
     }
 
     animDraw(){

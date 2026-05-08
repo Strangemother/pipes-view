@@ -756,6 +756,11 @@ class Graph {
         return this[n].apply(this, arguments)
     }
 
+    removeConnection(){
+        let n = `${this.dataType}_removeConnection`
+        return this[n].apply(this, arguments)
+    }
+
     getNextNodeIds(){
         let n = `${this.dataType}_getNextNodeIds`
         return this[n].apply(this, arguments)
@@ -774,6 +779,50 @@ class Graph {
     connectionsArrayDicts(){
         let n = `${this.dataType}_connectionsArrayDicts`
         return this[n].apply(this, arguments)
+    }
+
+    removeValue(list, value) {
+        if(Array.isArray(list) == false) {
+            return false
+        }
+
+        let index = list.indexOf(value)
+        if(index < 0) {
+            return false
+        }
+
+        list.splice(index, 1)
+        return true
+    }
+
+    removeMatch(list, matcher) {
+        if(Array.isArray(list) == false) {
+            return undefined
+        }
+
+        let index = list.findIndex(matcher)
+        if(index < 0) {
+            return undefined
+        }
+
+        return list.splice(index, 1)[0]
+    }
+
+    pruneConnectionBucket(connections, name) {
+        let nodeConnections = connections?.[name]
+        if(nodeConnections == undefined) {
+            return
+        }
+
+        for(let key of Object.keys(nodeConnections)) {
+            if(Array.isArray(nodeConnections[key]) && nodeConnections[key].length == 0) {
+                delete nodeConnections[key]
+            }
+        }
+
+        if(Object.keys(nodeConnections).length == 0) {
+            delete connections[name]
+        }
     }
 
     /* ------ */
@@ -808,7 +857,19 @@ class Graph {
             connsB['from'] = cbFrom
         }
 
-        cbFrom.push(b)
+        cbFrom.push(a)
+
+    }
+
+    dictDict_removeConnection(a, b, connections) {
+        connections = connections || this.data.connectionsDictDict || {}
+        let removedTo = this.removeValue(connections?.[a]?.to, b)
+        let removedFrom = this.removeValue(connections?.[b]?.from, a)
+
+        this.pruneConnectionBucket(connections, a)
+        this.pruneConnectionBucket(connections, b)
+
+        return removedTo && removedFrom
 
     }
 
@@ -849,6 +910,13 @@ class Graph {
         connections.push({ sender: a, receiver: b })
     }
 
+    listDict_removeConnection(a, b, connections) {
+        connections = connections || this.data.connectionsDicts || []
+        return this.removeMatch(connections, (connection) => {
+            return connection?.sender == a && connection?.receiver == b
+        }) != undefined
+    }
+
     listDict_getNextNodeIds(name, connections) {
         connections = connections || this.data.connectionsDicts
         return this.connectionsArrayDicts(name, 'sender', 'receiver', connections)
@@ -875,6 +943,13 @@ class Graph {
     listList_addConnection(a, b, connections) {
         connections = connections || this.data.connectionsList
         connections.push([a,b])
+    }
+
+    listList_removeConnection(a, b, connections) {
+        connections = connections || this.data.connectionsList || []
+        return this.removeMatch(connections, (connection) => {
+            return connection?.[0] == a && connection?.[1] == b
+        }) != undefined
     }
 
     listList_getNextNodeIds(name, connections) {
@@ -914,6 +989,28 @@ class Graph {
 
         connections.push(connection)
         return connection
+    }
+
+    pipDict_removeConnection(sender, receiver, senderPipIndex=0, receiverPipIndex=0, connections) {
+        let target = sender
+
+        if(sender?.sender != undefined && sender?.receiver != undefined) {
+            connections = connections || (Array.isArray(receiver) ? receiver : undefined)
+        } else {
+            target = this.createConnectionEntry(sender, receiver, senderPipIndex, receiverPipIndex)
+        }
+
+        connections = connections || this.data.connectionsPipDicts || []
+        let targetEntry = this.normalizeConnectionEntry(target)
+        let removed = this.removeMatch(connections, (connection) => {
+            let entry = this.normalizeConnectionEntry(connection)
+            return entry?.outbound?.label == targetEntry?.outbound?.label
+                && entry?.inbound?.label == targetEntry?.inbound?.label
+                && entry?.outbound?.pipIndex == targetEntry?.outbound?.pipIndex
+                && entry?.inbound?.pipIndex == targetEntry?.inbound?.pipIndex
+        })
+
+        return removed != undefined
     }
 
     pipDict_getNextNodeIds(name, connections) {

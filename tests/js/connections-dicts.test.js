@@ -94,3 +94,33 @@ test('connectionsDicts supports async nodes and raw promise input', async () => 
     /* assert */
     assert.deepEqual(toPlain(stepper.stash), { finish: [21] })
 })
+
+test('connectionsDicts addConnection and removeConnection update the edge list', () => {
+    /* setup */
+    const { Graph } = loadGraphRuntime()
+
+    const graph = new Graph({
+        connectionsDicts: [],
+        nodes: {},
+    })
+
+    graph.dataType = 'listDict'
+
+    /* run */
+    graph.addConnection('start', 'finish')
+
+    /* assert */
+    assert.deepEqual(toPlain(graph.data.connectionsDicts), [
+        { sender: 'start', receiver: 'finish' },
+    ])
+    assert.deepEqual(Array.from(graph.getNextNodeIds('start')), ['finish'])
+    assert.deepEqual(Array.from(graph.getPrevNodeIds('finish')), ['start'])
+
+    /* run */
+    assert.equal(graph.removeConnection('start', 'finish'), true)
+
+    /* assert */
+    assert.deepEqual(toPlain(graph.data.connectionsDicts), [])
+    assert.deepEqual(Array.from(graph.getNextNodeIds('start')), [])
+    assert.deepEqual(Array.from(graph.getPrevNodeIds('finish')), [])
+})

@@ -15,6 +15,12 @@ const dispatchFocusNodeEvent = function(data={}){
     }))
 }
 
+const dispatchRemovePipeEvent = function(data={}){
+    document.dispatchEvent(new CustomEvent('removepipe', {
+        detail: data
+    }))
+}
+
 
 const listenEvent = function(name, callback, opts={ passive: true }) {
     document.addEventListener(name, callback, opts)
@@ -48,11 +54,63 @@ class CanvasLayerGroup {
     constructor(...layers) {
         this.layers = layers
         document.addEventListener('connectnodes', this.connectNodesEvent.bind(this))
+        document.addEventListener('removepipe', this.removeConnectionEvent.bind(this))
+        this.bindDeletePipeGesture()
     }
 
     connectNodesEvent(event) {
         let obj = event.detail
         return this.connectNodes(obj)
+    }
+
+    removeConnectionEvent(event) {
+        return this.removeConnection(event.detail)
+    }
+
+    bindDeletePipeGesture() {
+        const targetLayer = this.layers?.[this.layers.length - 1]
+        const canvas = targetLayer?.canvas
+        if(canvas == undefined || canvas.addEventListener == undefined) {
+            return
+        }
+
+        this._boundDeletePipeGesture = this._boundDeletePipeGesture || this.onDeletePipeGesture.bind(this)
+        canvas.addEventListener('contextmenu', this._boundDeletePipeGesture)
+    }
+
+    onDeletePipeGesture(event) {
+        event.preventDefault()
+        const point = this.getCanvasPointFromEvent(event)
+        if(point == null) {
+            return false
+        }
+
+        return this.removeConnectionNearPoint(point.x, point.y)
+    }
+
+    getCanvasPointFromEvent(event) {
+        const targetLayer = this.layers?.[this.layers.length - 1]
+        const canvas = targetLayer?.canvas
+        if(canvas == undefined || canvas.getBoundingClientRect == undefined) {
+            return null
+        }
+
+        const rect = canvas.getBoundingClientRect()
+        const scaleX = rect.width == 0 ? 1 : canvas.width / rect.width
+        const scaleY = rect.height == 0 ? 1 : canvas.height / rect.height
+
+        return {
+            x: (event.clientX - rect.left) * scaleX,
+            y: (event.clientY - rect.top) * scaleY,
+        }
+    }
+
+    getConnectionId(obj) {
+        if(obj?.sender == undefined || obj?.receiver == undefined) {
+            return null
+        }
+
+        return `${obj.sender.label}-${obj.sender.pipIndex}-${obj.receiver.label}-${obj.receiver.pipIndex}`
     }
 
     connectNodes(obj) {
@@ -80,13 +138,14 @@ class CanvasLayerGroup {
         let senderUnit = app.getTip(obj.sender.label, obj.sender.direction, obj.sender.pipIndex)
         let receiverUnit = app.getTip(obj.receiver.label, obj.receiver.direction, obj.receiver.pipIndex)
 
-        let _id = `${obj.sender.label}-${obj.sender.pipIndex}-${obj.receiver.label}-${obj.receiver.pipIndex}`
+        let _id = this.getConnectionId(obj)
 
         let store = pipeData.connections[_id];
 
         if(store == undefined) {
             // make a new one
             perfLog('Stashed', _id)
+            pipeData.raw.push(obj)
             pipeData.connections[_id] = {
                 obj
                 , senderUnit
@@ -101,6 +160,169 @@ class CanvasLayerGroup {
         }
     }
 
+    removeConnection(target) {
+        let connectionId = typeof target == 'string' ? target : this.getConnectionId(target)
+        if(connectionId == null) {
+            return false
+        }
+
+        let existing = pipeData.connections[connectionId]
+        if(existing == undefined) {
+            return false
+        }
+
+        delete pipeData.connections[connectionId]
+        pipeData.raw = pipeData.raw.filter((entry) => this.getConnectionId(entry) != connectionId)
+
+        for(let layer of this.layers) {
+            if(layer?.lines != undefined) {
+                delete layer.lines[connectionId]
+            }
+        }
+
+        dispatchRequestDrawEvent({ connectionId })
+        return true
+    }
+
+    clearConnections() {
+        pipeData.raw.length = 0
+        pipeData.connections = {}
+
+        for(let layer of this.layers) {
+            if(layer?.lines != undefined) {
+                layer.lines = {}
+            }
+        }
+
+        dispatchRequestDrawEvent()
+    }
+
+    removeConnectionNearPoint(x, y, tolerance=12) {
+        const lineLayer = this.layers?.[1]
+        const lines = Object.values(lineLayer?.lines || {})
+        if(lines.length == 0) {
+            return false
+        }
+
+        let bestLine = null
+        let bestDistance = Infinity
+        for(let line of lines) {
+            const distance = this.getLineHitDistance(line, x, y)
+            if(distance < bestDistance) {
+                bestDistance = distance
+                bestLine = line
+            }
+        }
+
+        if(bestLine == null) {
+            return false
+        }
+
+        const lineWidth = Number(bestLine?.obj?.width) || 2
+        if(bestDistance > Math.max(tolerance, lineWidth + 6)) {
+            return false
+        }
+
+        return this.removeConnection(bestLine._id)
+    }
+
+    getLineHitDistance(line, x, y) {
+        const points = this.getLineSamplePoints(line)
+        if(points.length < 2) {
+            return Infinity
+        }
+
+        let best = Infinity
+        for(let index = 1; index < points.length; index++) {
+            const distance = this.distanceToSegment({ x, y }, points[index - 1], points[index])
+            if(distance < best) {
+                best = distance
+            }
+        }
+
+        return best
+    }
+
+    getLineSamplePoints(line, samples=24) {
+        if(line == undefined || line.a == undefined || line.b == undefined) {
+            return []
+        }
+
+        const design = this.layers?.[1]?.getLineDesign(line) || 's-curve'
+        if(design == 'straight') {
+            return [line.a, line.b]
+        }
+
+        const dx = line.b.x - line.a.x
+        const minHandle = 24
+        const handleFactor = 0.35
+        const handle = Math.max(minHandle, Math.abs(dx) * handleFactor)
+        let c1x
+        let c2x
+
+        if(design == 'curve') {
+            const sign = dx >= 0 ? 1 : -1
+            c1x = line.a.x + (sign * handle)
+            c2x = line.b.x - (sign * handle)
+        } else {
+            const fallbackSenderSign = dx >= 0 ? 1 : -1
+            const fallbackReceiverSign = -fallbackSenderSign
+            const senderSign = line.senderDirection == 'outbound'
+                ? 1
+                : (line.senderDirection == 'inbound' ? -1 : fallbackSenderSign)
+            const receiverSign = line.receiverDirection == 'inbound'
+                ? -1
+                : (line.receiverDirection == 'outbound' ? 1 : fallbackReceiverSign)
+            c1x = line.a.x + (senderSign * handle)
+            c2x = line.b.x + (receiverSign * handle)
+        }
+
+        const points = []
+        for(let index = 0; index <= samples; index++) {
+            const t = index / samples
+            points.push(this.getBezierPoint(
+                { x: line.a.x, y: line.a.y },
+                { x: c1x, y: line.a.y },
+                { x: c2x, y: line.b.y },
+                { x: line.b.x, y: line.b.y },
+                t,
+            ))
+        }
+
+        return points
+    }
+
+    getBezierPoint(a, b, c, d, t) {
+        const mt = 1 - t
+        const mt2 = mt * mt
+        const t2 = t * t
+        const x = (mt2 * mt * a.x)
+            + (3 * mt2 * t * b.x)
+            + (3 * mt * t2 * c.x)
+            + (t2 * t * d.x)
+        const y = (mt2 * mt * a.y)
+            + (3 * mt2 * t * b.y)
+            + (3 * mt * t2 * c.y)
+            + (t2 * t * d.y)
+
+        return { x, y }
+    }
+
+    distanceToSegment(point, a, b) {
+        const dx = b.x - a.x
+        const dy = b.y - a.y
+        if(dx == 0 && dy == 0) {
+            return Math.hypot(point.x - a.x, point.y - a.y)
+        }
+
+        const lengthSquared = (dx * dx) + (dy * dy)
+        const projection = (((point.x - a.x) * dx) + ((point.y - a.y) * dy)) / lengthSquared
+        const clamped = Math.max(0, Math.min(1, projection))
+        const px = a.x + (clamped * dx)
+        const py = a.y + (clamped * dy)
+        return Math.hypot(point.x - px, point.y - py)
+    }
+
     animDraw(...args) {
         /*
         Perform animated draw of the connections.
@@ -113,7 +335,7 @@ class CanvasLayerGroup {
         Draws will only occur if the view is _dirty_:
 
         - When a new connection is made (connectNodes is called)
-        - When a connection is removed (not implemented yet)
+        - When a connection is removed
         - When a node moves.
 
         this is done though an event `requestDraw` that should be emitted whenever a redraw is needed.
@@ -589,689 +811,6 @@ const drawSCurveLinesWithTipDirection = function(ctx, lines, color='purple') {
     ;penFunctions.drawSCurveLinesWithTipDirection = drawSCurveLinesWithTipDirection;
 
 /*
-
-The graph walker discovers _from_ and _to_ connections for nodes.
-Each node within the graph is essentially an ID.
-
-The data attached to the node is the exection code.
-
-- get and create connections: as an id list
-- get node - the vue app within the winbox window
-
- */
-class GraphWalker {
-	constructor(conf={}) {
-		this.connections = conf.connections || pipeData.connections
-		this.conf = conf
-		// this.windows = conf.windows || app.windowMap
-	}
-
-	get windows() {
-		return this.conf.windows || app.windowMap
-	}
-
-	getConnections(name) {
-		if(name == undefined) {
-			return []
-		}
-
-		let res = []
-		for(let connectionId in this.connections) {
-			let connection = this.connections[connectionId]
-			if(connection == undefined || connection.obj == undefined) {
-				continue
-			}
-
-			let senderLabel = connection.obj.sender?.label
-			let receiverLabel = connection.obj.receiver?.label
-
-			if(senderLabel == name || receiverLabel == name) {
-				res.push(connection)
-			}
-		}
-
-		return res
-	}
-
-	getIncomingIds(name) {
-		return this.getDirection(name, false)
-	}
-
-	getOutgoingIds(name) {
-		return this.getDirection(name, true)
-	}
-
-	getDirection(name, outbound=true) {
-		if(name == undefined) {
-			return []
-		}
-
-		let res = []
-		for(let connectionId in this.connections) {
-			let connection = this.connections[connectionId]
-			if(connection == undefined || connection.obj == undefined) {
-				continue
-			}
-
-			let sender = connection.obj?.sender
-			let receiver = connection.obj?.receiver
-
-			let outboundLabel = sender?.label
-			let inboundLabel = receiver?.label
-			if(sender?.direction == 'inbound' && receiver?.direction == 'outbound') {
-				outboundLabel = receiver?.label
-				inboundLabel = sender?.label
-			}
-
-			let sourceLabel = outbound ? outboundLabel : inboundLabel
-			let targetLabel = outbound ? inboundLabel : outboundLabel
-			if(sourceLabel == name && targetLabel != undefined) {
-				res.push(targetLabel)
-			}
-		}
-
-		return [...new Set(res)]
-	}
-
-	createConnection(fromName, toName, senderPipIndex=0, receiverPipIndex=0, line={}) {
-		if(fromName == undefined || toName == undefined) {
-			return null
-		}
-
-		const senderWindow = this.windows[fromName]
-		const receiverWindow = this.windows[toName]
-		if(senderWindow == undefined || receiverWindow == undefined) {
-			console.error('Cannot create connection; unknown window label.', { fromName, toName })
-			return null
-		}
-
-		const lineConfig = {
-			color: line?.color,
-			design: line?.design ?? line?.style ?? line?.lineDesign
-		}
-
-		const connection = {
-			sender: {
-				label: fromName,
-				direction: 'outbound',
-				pipIndex: senderPipIndex
-			},
-			receiver: {
-				label: toName,
-				direction: 'inbound',
-				pipIndex: receiverPipIndex
-			},
-			line: lineConfig
-		}
-
-		document.dispatchEvent(new CustomEvent('connectnodes', {
-			detail: connection
-		}))
-
-		return connection
-	}
-
-	clearConnections() {
-		for(let connectionId in this.connections) {
-			delete this.connections[connectionId]
-		}
-
-		pipeData.raw.length = 0
-
-		for(let i = 0; i < clItems.layers.length; i++) {
-			let layer = clItems.layers[i]
-			if(layer.lines != undefined) {
-				layer.lines = {}
-			}
-		}
-	}
-
-    getWindow(name) {
-        // Returns the window object for the given name, or null if not found.
-        if(name == undefined) {
-            return null
-        }
-
-        const win = this.windows[name]
-
-
-        if(win == null && this.conf.app.getGraphNodeElement) {
-        	return this.conf.app.getGraphNodeElement(name)
-        }
-
-        return run
-
-    }
-
-    getNode(name) {
-        // return the app within the node.
-        const win = this.getWindow(name)
-        if(win == null) {
-            return null
-        }
-        debugger;
-        return win.vueApp || null
-    }
-}
-
-
-class LocalStorageGraphWalker extends GraphWalker {
-	exportJSON(indent=2) {
-		let graph = {
-			windows: Object.keys(this.windows).map((name) => {
-				const win = this.windows[name]
-				return { name, x: win.x, y: win.y }
-			}),
-			connections: []
-		}
-
-		for(let connectionId in this.connections) {
-			let connection = this.connections[connectionId]
-			let obj = connection?.obj
-			if(obj == undefined) {
-				continue
-			}
-
-			let exportedConnection = {
-				sender: {
-					label: obj.sender?.label,
-					direction: obj.sender?.direction || 'outbound',
-					pipIndex: obj.sender?.pipIndex ?? 0
-				},
-				receiver: {
-					label: obj.receiver?.label,
-					direction: obj.receiver?.direction || 'inbound',
-					pipIndex: obj.receiver?.pipIndex ?? 0
-				},
-				line: {
-					color: obj.line?.color,
-					design: obj.line?.design
-				}
-			}
-
-			graph.connections.push(exportedConnection)
-		}
-
-		return JSON.stringify(graph, null, indent)
-	}
-
-	importJSON(content, replace=true) {
-		let graph = content
-		if(typeof content == 'string') {
-			try {
-				graph = JSON.parse(content)
-			} catch(error) {
-				console.error('Invalid graph JSON payload.', error)
-				return null
-			}
-		}
-
-		if(graph == undefined || typeof graph != 'object') {
-			return null
-		}
-
-		if(replace) {
-			this.clearConnections()
-		}
-
-		// Normalise window entries: support both legacy strings and { name, x, y } objects
-		const windowEntries = (Array.isArray(graph.windows) ? graph.windows : []).map((entry) =>
-			typeof entry === 'string' ? { name: entry } : entry
-		)
-		const windowMap = new Map(windowEntries.map((e) => [e.name, e]))
-		const connections = Array.isArray(graph.connections) ? graph.connections : []
-
-		for(let i = 0; i < connections.length; i++) {
-			let connection = connections[i]
-			let senderLabel = connection?.sender?.label
-			let receiverLabel = connection?.receiver?.label
-			if(senderLabel != undefined && !windowMap.has(senderLabel)) {
-				windowMap.set(senderLabel, { name: senderLabel })
-			}
-			if(receiverLabel != undefined && !windowMap.has(receiverLabel)) {
-				windowMap.set(receiverLabel, { name: receiverLabel })
-			}
-		}
-
-		windowMap.forEach((entry) => {
-			if(entry.name == undefined || this.windows[entry.name] != undefined) {
-				return
-			}
-
-			const conf = { name: entry.name }
-			if(entry.x != undefined) { conf.x = entry.x }
-			if(entry.y != undefined) { conf.y = entry.y }
-			app.spawnWindow(conf)
-		})
-
-		for(let i = 0; i < connections.length; i++) {
-			let connection = connections[i]
-			let sender = connection?.sender
-			let receiver = connection?.receiver
-			let line = connection?.line
-			let fromName = sender?.label
-			let toName = receiver?.label
-
-			if(fromName == undefined || toName == undefined) {
-				continue
-			}
-
-			this.createConnection(
-				fromName,
-				toName,
-				sender?.pipIndex ?? 0,
-				receiver?.pipIndex ?? 0,
-				line
-			)
-		}
-
-		return graph
-	}
-
-	saveToLocalStorage(storageKey='pipe-view-graph') {
-		const json = this.exportJSON()
-		localStorage.setItem(storageKey, json)
-		return json
-	}
-
-	restoreFromLocalStorage(storageKey='pipe-view-graph', replace=true) {
-		const json = localStorage.getItem(storageKey)
-		if(json == null) {
-			return null
-		}
-
-		return this.importJSON(json, replace)
-	}
-
-	/* Reads saved window positions from localStorage and moves any already-open
-	   windows to their stored x/y. If the key does not exist, does nothing. */
-	restorePositions(storageKey='pipe-view-graph') {
-		const json = localStorage.getItem(storageKey)
-		if(json == null) {
-			return
-		}
-
-		let graph
-		try {
-			graph = JSON.parse(json)
-		} catch(error) {
-			console.error('restorePositions: invalid JSON', error)
-			return
-		}
-
-		const entries = Array.isArray(graph?.windows) ? graph.windows : []
-		for(const entry of entries) {
-			if(typeof entry !== 'object' || entry.x == undefined || entry.y == undefined) {
-				continue
-			}
-			const win = this.windows[entry.name]
-			if(win != undefined) {
-				win.move(entry.x, entry.y)
-			}
-		}
-	}
-}
-
-/*
-
-Graph highlighter runs the graph and to add/remove css classes.
-Use this directory or use the pipeTools convenience tool
-
-In all cases this adds a css class.
-
-- highlight a node `node-highlight`
-- run a cycle `cycleFrom`
-- `runLights` timely runs the graph paths.
-
-
-*/
-
-
-class GraphHighlighter {
-
-    constructor(conf={}) {
-        this.app = conf.app || app
-        this.walker = conf.walker || new GraphWalker()
-        this.highlightClass = conf.highlightClass || 'node-highlight'
-        this.cycleClass = conf.cycleClass || 'node-cycle'
-        this._highlighted = new Set()
-        this._cycleFrontier = []
-        this._cyclePrev = null
-        this._cycleStart = null
-        this._cycleStarted = false
-        this._runTimer = null
-    }
-
-    _getWin(name) {
-        if(this.app.getGraphNodeElement) {
-            return this.app.getGraphNodeElement(name)
-        }
-        return this.app.windowMap[name]
-    }
-
-    /* Adds the highlight class to the named node's window. */
-    highlight(node) {
-        const win = this._getWin(node)
-        if(win == undefined) { return }
-        win.addClass(this.highlightClass)
-        this._highlighted.add(node)
-    }
-
-    /* Removes the highlight class from all currently highlighted nodes. */
-    clearHighlights() {
-        for(const name of this._highlighted) {
-            const win = this._getWin(name)
-            if(win) { win.removeClass(this.highlightClass) }
-        }
-        this._highlighted.clear()
-    }
-
-    /* Clears all highlights then lights up only the given node. */
-    oneLight(node) {
-        this.clearHighlights()
-        this.highlight(node)
-    }
-
-    /* Sets up a walk starting from node. Each stepLights() call dynamically
-       computes the next frontier from the current one, so cycles are followed
-       naturally rather than being cut off at setup time. */
-    cycleFrom(node) {
-        this.clearCycle()
-        this._cycleStart = node
-        this._cycleFrontier = [node]
-        this._cyclePrev = null
-        this._cycleStarted = false
-    }
-
-    /* Advances the cycle by one frontier level:
-       - Removes the cycle class from the previous frontier.
-       - Applies the cycle class to every node in the current frontier.
-       - Computes the next frontier from outgoing connections (live, no
-         cross-step visited tracking, so loops are followed naturally).
-       wrap=false (default): stops only when the next frontier is empty,
-         i.e. all branches have genuinely no outgoing connections.
-       wrap=true: when all branches terminate, resets to the start node. */
-    stepLights(wrap=false) {
-        if(this._cycleFrontier.length === 0) { return }
-
-        // Remove previous frontier's class
-        if(this._cyclePrev) {
-            for(const name of this._cyclePrev) {
-                const win = this._getWin(name)
-                if(win) {
-                    if(win.removeClass){
-                        win.removeClass(this.cycleClass)
-                    } else {
-                        win.classList.remove(this.cycleClass)
-                    }
-                } else {
-                    console.warn('Cannot change class of a missing element: ', name)
-                }
-            }
-        }
-
-        // Light the current frontier
-        for(const name of this._cycleFrontier) {
-            const win = this._getWin(name)
-            if(win) {
-                if(win.addClass){
-                    win.addClass(this.cycleClass)
-                } else {
-                    win.classList.add(this.cycleClass)
-                }
-            } else {
-                console.warn('Cannot change class of a missing element: ', name)
-            }
-        }
-
-        // Compute next frontier dynamically from outgoing connections
-        const seen = new Set()
-        const nextFrontier = []
-        for(const name of this._cycleFrontier) {
-            const outgoing = this.walker.getOutgoingIds(name)
-            for(const next of outgoing) {
-                if(!seen.has(next)) {
-                    seen.add(next)
-                    nextFrontier.push(next)
-                }
-            }
-        }
-
-        this._cyclePrev = this._cycleFrontier
-        this._cycleStarted = true
-
-        if(nextFrontier.length === 0) {
-            // No outgoing connections — all branches are terminal
-            this._cycleFrontier = wrap ? [this._cycleStart] : []
-        } else {
-            this._cycleFrontier = nextFrontier
-        }
-    }
-
-    /* Returns true if the cycle has a non-empty frontier to advance through. */
-    _hasCycleSteps() {
-        return this._cycleFrontier.length > 0
-    }
-
-    /* Runs the full cycle from node automatically, advancing one BFS level per
-       interval until no steps remain, then stops.
-       options.delay   — ms between steps (default 400)
-       options.wrap    — whether to loop indefinitely (default false)
-       options.onDone  — optional callback fired when sequence ends */
-    runLights(node, options={}) {
-        const delay = options.delay ?? options.timeout ?? 400
-        const wrap = options.wrap ?? false
-        const onDone = options.onDone
-
-        this.stopLights()
-        this.cycleFrom(node)
-
-        const tick = () => {
-            this.stepLights(wrap)
-            if(!wrap && !this._hasCycleSteps()) {
-                this._runTimer = null
-                if(onDone) { onDone() }
-                return
-            }
-            this._runTimer = setTimeout(tick, delay)
-        }
-
-        this._runTimer = setTimeout(tick, delay)
-    }
-
-    /* Cancels a running runLights sequence. */
-    stopLights() {
-        if(this._runTimer != null) {
-            clearTimeout(this._runTimer)
-            this._runTimer = null
-        }
-    }
-
-    /* Removes cycle class from all active frontier nodes and resets state. */
-    clearCycle() {
-        for(const group of [this._cyclePrev, this._cycleFrontier]) {
-            if(!group) { continue }
-            for(const name of group) {
-                const win = this._getWin(name)
-
-                if(win) {
-                    if(win.removeClass){
-                        win.removeClass(this.cycleClass)
-                    } else {
-                        win.classList.remove(this.cycleClass)
-                    }
-                } else {
-                    console.warn('Cannot change class of a missing element: ', name)
-                }
-            }
-        }
-        this._cycleFrontier = []
-        this._cyclePrev = null
-        this._cycleStart = null
-        this._cycleStarted = false
-    }
-}
-
-/*
-
-The GraphExecutor extends LocalStorageGraphWalker to provide _execution_ methods.
-
-- Call to run code setup on a node
-- Each step is a call to `executeNode(name, data)`
-- then it steps to the next nodes
-
- */
-
-class GraphExecutor extends LocalStorageGraphWalker {
-    // Walk with code execution
-    constructor(conf={}) {
-        super(conf)
-        this.conf = conf
-    }
-
-    get taskMap() {
-        return this.conf.taskMap || {}
-    }
-
-    clearExecutionState() {
-        const root = document.querySelector('main') || document
-        root
-            .querySelectorAll('.winbox.executing, .winbox.executed')
-            .forEach((element) => {
-                element.classList.remove('executing', 'executed')
-            })
-    }
-
-    getNodeElement(nodeName) {
-        return this.getWindow(nodeName)
-    }
-
-    executeNode(nodeName, data, options={}) {
-        const node = this.getNodeElement(nodeName)
-        if(node == null) {
-            console.warn(`No node found with name ${nodeName}`)
-            return
-        }
-
-        // if(options.resetState ?? true) {
-            // this.clearExecutionState()
-        // }
-
-        let win = node // node.getWinboxWindow()
-        let winBoxClasses = win.classList;
-
-        winBoxClasses.add('executing')
-
-        let lightTimeout = options.lightTimeout == undefined? options.delay: options.lightTimeout;
-        lightTimeout = lightTimeout == undefined? 400: lightTimeout
-
-        // Run work
-        const taskName = nodeName // node.task || 'default'
-        let taskFunc = this.taskMap[taskName] || this.taskMap['defaultTask']
-        if(typeof taskFunc !== 'function') {
-            console.warn(`No task function found for task ${taskName} on node ${nodeName}`)
-            // return
-            taskFunc = (node,data)=>{}
-        }
-
-        taskFunc = taskFunc.bind(this.taskMap)
-
-        let result = undefined;
-
-        try {
-            result = taskFunc(node, data)
-            setTimeout(()=>{
-                winBoxClasses.remove('executing')
-            }, lightTimeout)
-        } catch (err) {
-            console.error(`Error executing task ${taskName} for node ${nodeName}:`, err)
-        }
-
-        // winBsoxClasses.remove('executing')
-        // winBoxClasses.add('executed')
-
-        return result;
-
-    }
-
-    executeAndExpected(nodeName, data, options={}) {
-        const result = this.executeNode(nodeName, data, options)
-        return [result, this.getOutgoingIds(nodeName)]
-    }
-
-    executeLoop(nodeName, data, options={}) {
-        /* Execute the node with the data, then schedule each downstream node
-        on a timer — one step per tick. Returns a controller so the caller can
-        stop the chain or adjust the speed mid-run.
-
-            const chain = executor.executeLoop('apples', myData)
-            chain.setDelay(500)   // speed up to 500ms
-            chain.stop()          // cancel all pending steps
-        */
-
-        // conf is shared across all branches of this chain so setDelay()
-        // affects every in-flight branch immediately.
-        const conf = { delay: options.delay ?? 1000 }
-
-        // All pending timeout IDs — stop() drains this to cancel the chain.
-        const timers = new Set()
-
-
-        this.clearExecutionState()
-
-        const step = (nodeName, data) => {
-            const [result, nextIds] = this.executeAndExpected(nodeName, data, conf)
-
-            if(nextIds.length === 0) {
-                // Terminal node — valid end of a pipeline branch.
-                return
-            }
-
-            /*
-            For each outgoing connection, execute the next node with the result as input.
-            Note: Parallel execution must exist.
-            Therefore each result is fed into its own connections.
-
-                a => b -> e
-                     c -> d -> f
-                               g
-
-            Data between b -> e is separate from c -> d -> f -> g.
-
-            */
-
-            for(const nextId of nextIds) {
-                // When branching, each child gets its own deep copy of result so
-                // mutations in one pipeline branch cannot corrupt another.
-                // Primitives are passed as-is (copy-by-value already).
-                const branchData = (nextIds.length > 1 && result !== null && typeof result === 'object')
-                    ? structuredClone(result)
-                    : result
-
-                const id = setTimeout(() => {
-                    timers.delete(id)
-                    step(nextId, branchData)
-                }, conf.delay)
-
-                timers.add(id)
-            }
-        }
-
-        // Execute the entry node immediately, then let the timer drive the rest.
-        step(nodeName, data)
-
-        return {
-            stop() {
-                for(const id of timers) { clearTimeout(id) }
-                timers.clear()
-            },
-            setDelay(ms) { conf.delay = ms }
-        }
-    }
-
-}
-
-/*
 The PipeTool is the convience wrapper to capture all assets for the view.
 
 - app: the view app
@@ -1288,15 +827,10 @@ class PipesTool {
     //  user tool to access all the bits easily.
     filename = 'pipes-tool-graph'
     constructor(conf={}) {
-        let T = {}
-        try{
-            T = new WorkTasks
-        } catch{}
-
-        this.app = conf.app || app
-        this.walker = conf.walker || new GraphExecutor({ app: this.app, taskMap: T })
-        this.lights = new GraphHighlighter({ app: this.app, walker: this.walker })
-        this.layerGroup = conf.layerGroup || clItems
+        this.app = conf.app || globalThis.app || { windowMap: {} }
+        this.walker = conf.walker || null
+        this.lights = conf.lights || null
+        this.layerGroup = conf.layerGroup || globalThis.clItems
     }
 
     draw(){
@@ -1305,30 +839,59 @@ class PipesTool {
 
     save(name = this.filename) {
         // simple save method
+        if(this.walker?.saveToLocalStorage == undefined) {
+            console.warn('PipesTool.save requires an injected walker with saveToLocalStorage().')
+            return false
+        }
         this.walker.saveToLocalStorage(name)
+        return true
     }
 
     restore(name = this.filename) {
+        if(this.walker?.restoreFromLocalStorage == undefined || this.walker?.restorePositions == undefined) {
+            console.warn('PipesTool.restore requires an injected walker with local-storage restore helpers.')
+            return false
+        }
         this.walker.restoreFromLocalStorage(name)
         this.walker.restorePositions(name)
         setTimeout(() => {
             this.draw()
         }, 300);
+        return true
     }
 
     clear(){
         /* Wipe from interface. */
-        this.walker.clearConnections()
+        if(this.walker?.clearConnections) {
+            this.walker.clearConnections()
+        } else {
+            this.layerGroup.clearConnections()
+        }
         this.draw()
-        for(let k in this.app.windowMap) {
-            let _winbox = this.app.windowMap[k]
-            delete this.walker.windows[k]
+        const windowMap = this.app.windowMap || {}
+        for(let k in windowMap) {
+            let _winbox = windowMap[k]
+            if(this.walker?.windows) {
+                delete this.walker.windows[k]
+            }
             _winbox.unmount()
             _winbox.close()
 
         }
 
         this.app.windowMap = {}
+    }
+
+    removePipe(target) {
+        return this.layerGroup.removeConnection(target)
+    }
+
+    removeConnection(target) {
+        return this.removePipe(target)
+    }
+
+    deletePipe(target) {
+        return this.removePipe(target)
     }
 
     animDraw(){
@@ -1378,26 +941,20 @@ const PipesRuntime = {
     penFunctions: penFunctions,
     dispatchRequestDrawEvent: dispatchRequestDrawEvent,
     dispatchFocusNodeEvent: dispatchFocusNodeEvent,
+    dispatchRemovePipeEvent: dispatchRemovePipeEvent,
     listenEvent: listenEvent,
     CanvasLayer: CanvasLayer,
     CanvasLayerGroup: CanvasLayerGroup,
-    GraphWalker: GraphWalker,
-    LocalStorageGraphWalker: LocalStorageGraphWalker,
-    GraphHighlighter: GraphHighlighter,
-    GraphExecutor: GraphExecutor,
     PipesTool: PipesTool,
     createPipesRuntime: createPipesRuntime,
 }
 
     global.dispatchRequestDrawEvent = dispatchRequestDrawEvent
     global.dispatchFocusNodeEvent = dispatchFocusNodeEvent
+    global.dispatchRemovePipeEvent = dispatchRemovePipeEvent
     global.listenEvent = listenEvent
     global.CanvasLayer = CanvasLayer
     global.CanvasLayerGroup = CanvasLayerGroup
-    global.GraphWalker = GraphWalker
-    global.LocalStorageGraphWalker = LocalStorageGraphWalker
-    global.GraphHighlighter = GraphHighlighter
-    global.GraphExecutor = GraphExecutor
     global.PipesTool = PipesTool
     global.createPipesRuntime = createPipesRuntime
     global.PipesRuntime = PipesRuntime

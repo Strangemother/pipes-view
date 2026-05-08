@@ -28,9 +28,11 @@ The runtime bundle includes the parts that are likely to move as one package lat
 - connection events and draw requests
 - canvas line storage and rendering
 - pipe pen functions
-- graph walking, highlighting, and execution helpers
 - `PipesTool`
 - `createPipesRuntime(...)`
+
+Graph walking, highlighting, and execution helpers are no longer bundled into
+this runtime. If you still need them, inject them into `PipesTool` explicitly.
 
 The runtime does not include the app shell:
 
@@ -147,13 +149,17 @@ pipesTool.animDraw()
 pipesTool.save()
 pipesTool.restore()
 pipesTool.clear()
+pipesTool.deletePipe(connection)
 ```
+
+Rendered pipes can also be removed directly in the UI by right-clicking the
+line on the foreground canvas.
 
 Internally it groups:
 
 - `app`
-- `walker`
-- `lights`
+- optional `walker`
+- optional `lights`
 - `layerGroup`
 
 ## Current shape

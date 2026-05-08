@@ -106,3 +106,32 @@ test('connectionsDictDict works when handlers return promises', async () => {
     /* assert */
     assert.deepEqual(toPlain(stepper.stash), { finish: [20] })
 })
+
+test('connectionsDictDict addConnection and removeConnection keep forward and reverse indexes in sync', () => {
+    /* setup */
+    const { Graph } = loadGraphRuntime()
+
+    const graph = new Graph({
+        connectionsDictDict: {},
+        nodes: {},
+    })
+
+    /* run */
+    graph.addConnection('start', 'finish')
+
+    /* assert */
+    assert.deepEqual(toPlain(graph.data.connectionsDictDict), {
+        start: { to: ['finish'] },
+        finish: { from: ['start'] },
+    })
+    assert.deepEqual(Array.from(graph.getNextNodeIds('start')), ['finish'])
+    assert.deepEqual(Array.from(graph.getPrevNodeIds('finish')), ['start'])
+
+    /* run */
+    assert.equal(graph.removeConnection('start', 'finish'), true)
+
+    /* assert */
+    assert.deepEqual(toPlain(graph.data.connectionsDictDict), {})
+    assert.deepEqual(Array.from(graph.getNextNodeIds('start')), [])
+    assert.deepEqual(Array.from(graph.getPrevNodeIds('finish')), [])
+})

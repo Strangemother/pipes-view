@@ -10,6 +10,12 @@ const dispatchFocusNodeEvent = function(data={}){
     }))
 }
 
+const dispatchRemovePipeEvent = function(data={}){
+    document.dispatchEvent(new CustomEvent('removepipe', {
+        detail: data
+    }))
+}
+
 
 const listenEvent = function(name, callback, opts={ passive: true }) {
     document.addEventListener(name, callback, opts)

@@ -97,3 +97,33 @@ test('connectionsList also works with promise-based handlers', async () => {
     /* assert */
     assert.deepEqual(toPlain(stepper.stash), { finish: [14] })
 })
+
+test('connectionsList addConnection and removeConnection update the pair list', () => {
+    /* setup */
+    const { Graph } = loadGraphRuntime()
+
+    const graph = new Graph({
+        connectionsList: [],
+        nodes: {},
+    })
+
+    graph.dataType = 'listList'
+
+    /* run */
+    graph.addConnection('start', 'finish')
+
+    /* assert */
+    assert.deepEqual(toPlain(graph.data.connectionsList), [
+        ['start', 'finish'],
+    ])
+    assert.deepEqual(Array.from(graph.getNextNodeIds('start')), ['finish'])
+    assert.deepEqual(Array.from(graph.getPrevNodeIds('finish')), ['start'])
+
+    /* run */
+    assert.equal(graph.removeConnection('start', 'finish'), true)
+
+    /* assert */
+    assert.deepEqual(toPlain(graph.data.connectionsList), [])
+    assert.deepEqual(Array.from(graph.getNextNodeIds('start')), [])
+    assert.deepEqual(Array.from(graph.getPrevNodeIds('finish')), [])
+})
